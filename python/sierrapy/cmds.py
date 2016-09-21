@@ -27,8 +27,9 @@ def parse_args(argv):
     parser = argparse.ArgumentParser(
         description='A Client of HIVdb Sierra GraphQL Webservice.')
     subparsers = parser.add_subparsers(
-        dest='method',
+        dest='method', metavar='METHOD',
         help="Method to be used for querying the webservice.")
+    subparsers.required = True
     seqparser = subparsers.add_parser(
         'fasta', help='Analyze input FASTA sequences.')
     seqparser.add_argument(
