@@ -1,4 +1,7 @@
-inputSequence { header },
+inputSequence {
+    header,
+    SHA512
+},
 subtypeText,
 validationResults {
     level,

@@ -40,6 +40,9 @@ class SierraClient(object):
                 'Sierra GraphQL webservice returned errors:\n - ' +
                 '\n - '.join(errors))
 
+    def get_introspection(self):
+        return self._client.introspection
+
     def _sequence_analysis(self, sequences, query):
         result = self.execute(
             gql("""
