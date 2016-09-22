@@ -1,4 +1,4 @@
-## 0.1.1 (beta)
+## 0.1.1 (2016-09-22)
 
 Features:
   - add support to fetch lastest HIVdb version

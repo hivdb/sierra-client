@@ -15,6 +15,12 @@ this package using the command below:
 pip install sierrapy
 ```
 
+To install the latest version (unstable) from Github:
+
+```shell
+pip install -e "git+https://github.com/hivdb/sierra-client.git#egg=master&subdirectory=python"
+```
+
 
 Usage
 -----
