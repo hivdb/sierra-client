@@ -5,7 +5,7 @@ from gql import gql, Client
 from gql.transport.requests import RequestsHTTPTransport
 from requests.exceptions import HTTPError
 
-VERSION = '0.1'
+VERSION = '0.1.1'
 DEFAULT_URL = 'http://localhost:8080/graphql'
 
 
@@ -16,18 +16,26 @@ class ResponseError(Exception):
 class SierraClient(object):
 
     def __init__(self, url=DEFAULT_URL):
-        transport = RequestsHTTPTransport(url, use_json=True, timeout=300)
-        transport.headers = {
-            'Content-Type': 'application/json',
-            'User-Agent': 'sierra-client (python)/{}'.format(VERSION)
-        }
-        self._client = Client(
-            transport=transport,
-            fetch_schema_from_transport=True)
+        self.url = url
+        self._client = None
 
-    def execute(self, document, variable_values):
+    @property
+    def client(self):
+        if self._client is None:
+            transport = RequestsHTTPTransport(
+                self.url, use_json=True, timeout=300)
+            transport.headers = {
+                'Content-Type': 'application/json',
+                'User-Agent': 'sierra-client (python)/{}'.format(VERSION)
+            }
+            self._client = Client(
+                transport=transport,
+                fetch_schema_from_transport=True)
+        return self._client
+
+    def execute(self, document, variable_values=None):
         try:
-            return self._client.execute(
+            return self.client.execute(
                 document, variable_values=variable_values)
         except HTTPError as e:
             errors = [
@@ -41,7 +49,7 @@ class SierraClient(object):
                 '\n - '.join(errors))
 
     def get_introspection(self):
-        return self._client.introspection
+        return self.client.introspection
 
     def _sequence_analysis(self, sequences, query):
         result = self.execute(
@@ -85,3 +93,14 @@ class SierraClient(object):
                 """.format(query=query)),
             variable_values={"mutations": mutations})
         return result['viewer']['mutationsAnalysis']
+
+    def current_version(self):
+        result = self.execute(
+            gql("""
+                query sierrapy {
+                    viewer {
+                        currentVersion { text, publishDate }
+                    }
+                }
+                """))
+        return result['viewer']['currentVersion']

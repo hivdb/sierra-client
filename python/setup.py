@@ -6,9 +6,9 @@ import re
 import ast
 import setuptools
 
-_version_re = re.compile(r'__version__\s+=\s+(.*)')
+_version_re = re.compile(r'VERSION\s+=\s+(.*)')
 
-with open('sierrapy/__init__.py', 'rb') as f:
+with open('sierrapy/sierraclient.py', 'rb') as f:
     version = str(ast.literal_eval(_version_re.search(
         f.read().decode('utf-8')).group(1)))
 
@@ -27,7 +27,7 @@ def req(filename):
 setup_params = dict(
     name="sierrapy",
     version=version,
-    url="https://github.com/hivdb/sierra-client/tree/master/python/sierrapy",
+    url="https://github.com/hivdb/sierra-client/tree/master/python",
     author='Philip Tzou',
     author_email="philiptz@stanford.edu",
     description='A Client of HIVdb Sierra GraphQL Webservice.',

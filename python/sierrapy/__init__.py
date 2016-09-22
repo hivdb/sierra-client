@@ -1,5 +1,5 @@
 from . import fastareader, fragments
-from .sierraclient import SierraClient
+from .sierraclient import VERSION, SierraClient
 
-__version__ = '0.1.0'
+__version__ = VERSION
 __all__ = ['fastareader', 'SierraClient', 'fragments']
