@@ -4,6 +4,8 @@ Features:
   - new method `iter_sequence_analysis` available in `SierraClient`
   - by default return version object in DrugResistance object
   - adjust dependencies
+  - new method `toggle_progress` in `SierraClient` to allow progress meter
+    being switch on and off
 
 ## 0.1.1 (2016-09-22)
 

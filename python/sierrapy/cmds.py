@@ -110,6 +110,7 @@ def main():
     args = parse_args(sys.argv[1:])
     method = args.method
     client = SierraClient(args.url)
+    client.toggle_progress(True)
     if method == 'fasta':
         fasta_handler(client, args)
     elif method == 'mutations':

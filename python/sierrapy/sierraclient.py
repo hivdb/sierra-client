@@ -18,6 +18,13 @@ class SierraClient(object):
     def __init__(self, url=DEFAULT_URL):
         self.url = url
         self._client = None
+        self._progress = False
+
+    def toggle_progress(self, flag='auto'):
+        if flag == 'auto':
+            self._progress = not self._progress
+        else:
+            self._progress = bool(flag)
 
     @property
     def client(self):
@@ -70,20 +77,22 @@ class SierraClient(object):
 
     def sequence_analysis(self, sequences, query, step=20):
         result = []
-        pbar = tqdm(total=len(sequences))
+        if self._progress:
+            pbar = tqdm(total=len(sequences))
         while sequences:
             result.extend(self._sequence_analysis(sequences[:step], query))
             sequences = sequences[step:]
-            pbar.update(step)
+            self._progress and pbar.update(step)
         return result
 
     def iter_sequence_analysis(self, sequences, query, step=20):
-        pbar = tqdm(total=len(sequences))
+        if self._progress:
+            pbar = tqdm(total=len(sequences))
         while sequences:
             for result in self._sequence_analysis(sequences[:step], query):
                 yield result
             sequences = sequences[step:]
-            pbar.update(step)
+            self._progress and pbar.update(step)
 
     def mutations_analysis(self, mutations, query):
         result = self.execute(
