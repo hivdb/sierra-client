@@ -5,8 +5,8 @@ from gql import gql, Client
 from gql.transport.requests import RequestsHTTPTransport
 from requests.exceptions import HTTPError
 
-VERSION = '0.1.1'
-DEFAULT_URL = 'http://localhost:8080/graphql'
+VERSION = '0.1.2'
+DEFAULT_URL = 'https://hivdb.stanford.edu/graphql'
 
 
 class ResponseError(Exception):
@@ -76,6 +76,14 @@ class SierraClient(object):
             sequences = sequences[step:]
             pbar.update(step)
         return result
+
+    def iter_sequence_analysis(self, sequences, query, step=20):
+        pbar = tqdm(total=len(sequences))
+        while sequences:
+            for result in self._sequence_analysis(sequences[:step], query):
+                yield result
+            sequences = sequences[step:]
+            pbar.update(step)
 
     def mutations_analysis(self, mutations, query):
         result = self.execute(

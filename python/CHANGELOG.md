@@ -1,3 +1,10 @@
+## 0.1.2 (unstable)
+
+Features:
+  - new method `iter_sequence_analysis` available in `SierraClient`
+  - by default return version object in DrugResistance object
+  - adjust dependencies
+
 ## 0.1.1 (2016-09-22)
 
 Features:

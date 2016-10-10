@@ -29,6 +29,7 @@ alignedGeneSequences {
     }
 },
 drugResistance {
+    version { text, publishDate },
     gene { name },
     drugScores {
         drugClass { name },
