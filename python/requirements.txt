@@ -1,5 +1,5 @@
 gql>=0.1.0
-git+git://github.com/philiptzou/graphql-core.git@patch-1
+graphql-core>=0.5.3
 promise>=0.4.2
 requests>=2.11.1
 six>=1.10.0
