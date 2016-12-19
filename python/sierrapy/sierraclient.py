@@ -75,15 +75,22 @@ class SierraClient(object):
             variable_values={"sequences": sequences})
         return result['viewer']['sequenceAnalysis']
 
-    def sequence_analysis(self, sequences, query, step=20):
-        result = []
-        if self._progress:
-            pbar = tqdm(total=len(sequences))
-        while sequences:
-            result.extend(self._sequence_analysis(sequences[:step], query))
-            sequences = sequences[step:]
-            self._progress and pbar.update(step)
-        return result
+    def _pattern_analysis(self, patterns, query):
+        result = self.execute(
+            gql("""
+                query sierrapy($patterns:[[String]!]!) {{
+                    viewer {{
+                        patternAnalysis(patterns:$patterns) {{
+                            ...F0
+                        }}
+                    }}
+                }}
+                fragment F0 on MutationsAnalysis {{
+                    {query}
+                }}
+                """.format(query=query)),
+            variable_values={"patterns": patterns})
+        return result['viewer']['patternAnalysis']
 
     def iter_sequence_analysis(self, sequences, query, step=20):
         if self._progress:
@@ -93,6 +100,21 @@ class SierraClient(object):
                 yield result
             sequences = sequences[step:]
             self._progress and pbar.update(step)
+
+    def iter_pattern_analysis(self, patterns, query, step=20):
+        if self._progress:
+            pbar = tqdm(total=len(patterns))
+        while patterns:
+            for result in self._pattern_analysis(patterns[:step], query):
+                yield result
+            patterns = patterns[step:]
+            self._progress and pbar.update(step)
+
+    def sequence_analysis(self, sequences, query, step=20):
+        return list(self.iter_sequence_analysis(sequences, query, step))
+
+    def pattern_analysis(self, patterns, query, step=20):
+        return list(self.iter_pattern_analysis(patterns, query, step))
 
     def mutations_analysis(self, mutations, query):
         result = self.execute(

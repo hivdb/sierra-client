@@ -2,7 +2,7 @@ SierraPy
 ========
 
 SierraPy package contains a client and a command line program for
-[HIVdb][hivdb] Sierra GraphQL Webservice.
+[HIVDB][hivdb] Sierra GraphQL Webservice.
 
 
 Installation
@@ -31,7 +31,7 @@ report from backend service.
 
 ### Input Sequences (FASTA File)
 
-This method is corresponding to the [HIVdb "Input Sequences"][hivdb-seqinput]
+This method is corresponding to the [HIVDB "Input Sequences"][hivdb-seqinput]
 tab. It can accept any large number of files and sequences as long as you
 don't blow up your computer. The input FASTA files should contain at least one
 HIV/SIV pol DNA sequence.
@@ -66,7 +66,7 @@ For further infomations on how to write queries in GraphQL, please visit
 
 ### Input Mutations
 
-This method is corresponding to the [HIVdb "Input Mutations"][hivdb-mutinput]
+This method is corresponding to the [HIVDB "Input Mutations"][hivdb-mutinput]
 tab. It accepts PR, RT, and/or IN mutations based on
 [HIV-1 type B consensus][consensus]. The format of the mutations is not
 strictly required. Here's a list of examples for valid mutations:
@@ -93,6 +93,36 @@ sierrapy mutations PR:E35E_D RT:T67- IN:M50MI -o output.json
 
 You can also specify a custom query fragment on object `MutationsAnalysis`.
 Use the similar command like previous section to retrieve custom result.
+
+### Input Patterns
+A pattern is a set (list) of mutations. With this method, you can analyze
+mutations derived from different samples at the same time. The method accepts
+one or more files contained mutations. Each row in the files is considered as
+a pattern. Here's an example of a file contained 2 patterns:
+
+```
+RT:M41L + RT:M184V + RT:L210W + RT:T215Y
+PR:L24I + PR:M46L + PR:I54V + PR:V82A
+```
+
+These delimiters are supported: commas (`,`), plus signs(`+`), semicolon(`;`),
+whitespaces and tabs. The output result of this method is a list of
+`MutationsAnalysis` object, in the same order as the input.
+
+Here's a command example. It output the JSON result to the current console:
+
+```shell
+sierrapy patterns /path/to/pattern/file.txt
+```
+
+This one output the JSON result to a file:
+
+```shell
+sierrapy patterns /path/to/pattern/file.txt -o output.json
+```
+
+Custom query fragment on object `MutationsAnalysis` can be also specified by
+parameter `-q` or `--query`. As we described in the above section.
 
 
 [hivdb]: https://hivdb.stanford.edu/

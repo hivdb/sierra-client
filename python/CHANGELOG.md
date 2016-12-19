@@ -1,6 +1,9 @@
-## 0.1.2 (unstable)
+## 0.1.2 (2016-12-19)
 
 Features:
+  - new subcommand `pattern` to analyze multiple lists of mutations
+  - new methods `iter_pattern_analysis` and `pattern_analysis` to support
+    multiple lists of mutations
   - new method `iter_sequence_analysis` available in `SierraClient`
   - by default return version object in DrugResistance object
   - adjust dependencies
