@@ -84,7 +84,7 @@ class SierraClient(object):
         variables = {"patterns": patterns}
         if enable_hivalg:
             variables['algorithms'] = kw.get('algorithms')
-            variables['customAlgorithms'] = kw.get('customAlgorithms')
+            variables['customAlgorithms'] = kw.get('custom_algorithms')
         result = self.execute(
             gql("""
                 query sierrapy($patterns:[[String]!]!{extraparams}) {{
