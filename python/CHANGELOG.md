@@ -1,3 +1,6 @@
+## 0.1.3 (unstable)
+  - expose HIValg parameters in `pattern_analysis` method
+
 ## 0.1.2 (2016-12-19)
 
 Features:

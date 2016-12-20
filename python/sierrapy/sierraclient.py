@@ -5,7 +5,7 @@ from gql import gql, Client
 from gql.transport.requests import RequestsHTTPTransport
 from requests.exceptions import HTTPError
 
-VERSION = '0.1.2'
+VERSION = '0.1.3'
 DEFAULT_URL = 'https://hivdb.stanford.edu/graphql'
 
 
@@ -75,10 +75,19 @@ class SierraClient(object):
             variable_values={"sequences": sequences})
         return result['viewer']['sequenceAnalysis']
 
-    def _pattern_analysis(self, patterns, query):
+    def _pattern_analysis(self, patterns, query, **kw):
+        enable_hivalg = 'algorithms' in kw or 'customAlgorithms' in kw
+        extraparams = ''
+        if enable_hivalg:
+            extraparams = (', $algorithms:[ASIAlgorithm], '
+                           '$customAlgorithms: [CustomASIAlgorithm]')
+        variables = {"patterns": patterns}
+        if enable_hivalg:
+            variables['algorithms'] = kw.get('algorithms')
+            variables['customAlgorithms'] = kw.get('customAlgorithms')
         result = self.execute(
             gql("""
-                query sierrapy($patterns:[[String]!]!) {{
+                query sierrapy($patterns:[[String]!]!{extraparams}) {{
                     viewer {{
                         patternAnalysis(patterns:$patterns) {{
                             ...F0
@@ -88,8 +97,8 @@ class SierraClient(object):
                 fragment F0 on MutationsAnalysis {{
                     {query}
                 }}
-                """.format(query=query)),
-            variable_values={"patterns": patterns})
+                """.format(query=query, extraparams=extraparams)),
+            variable_values=variables)
         return result['viewer']['patternAnalysis']
 
     def iter_sequence_analysis(self, sequences, query, step=20):
@@ -101,11 +110,11 @@ class SierraClient(object):
             sequences = sequences[step:]
             self._progress and pbar.update(step)
 
-    def iter_pattern_analysis(self, patterns, query, step=20):
+    def iter_pattern_analysis(self, patterns, query, step=20, **kw):
         if self._progress:
             pbar = tqdm(total=len(patterns))
         while patterns:
-            for result in self._pattern_analysis(patterns[:step], query):
+            for result in self._pattern_analysis(patterns[:step], query, **kw):
                 yield result
             patterns = patterns[step:]
             self._progress and pbar.update(step)
@@ -113,8 +122,8 @@ class SierraClient(object):
     def sequence_analysis(self, sequences, query, step=20):
         return list(self.iter_sequence_analysis(sequences, query, step))
 
-    def pattern_analysis(self, patterns, query, step=20):
-        return list(self.iter_pattern_analysis(patterns, query, step))
+    def pattern_analysis(self, patterns, query, step=20, **kw):
+        return list(self.iter_pattern_analysis(patterns, query, step, **kw))
 
     def mutations_analysis(self, mutations, query):
         result = self.execute(

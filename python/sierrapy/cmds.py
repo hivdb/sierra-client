@@ -145,7 +145,7 @@ def patterns_handler(client, args):
     patterns = []
     for fp in args.patterns:
         for line in fp:
-            patterns.append(re.split(r'[,;+ \t]+', line))
+            patterns.append(re.split(r'[,;+ \t]+', line.strip()))
     query = fragments.MUTATIONS_ANALYSIS_DEFAULT
     if args.query:
         query = args.query.read()
