@@ -9,7 +9,7 @@ validationResults {
 },
 alignedGeneSequences {
     firstAA, lastAA,
-    gene { name },
+    gene { name, length },
     mutations {
         consensus,
         position,
