@@ -1,4 +1,4 @@
-## 0.1.3 (unstable)
+## 0.2.0 (development)
   - expose HIValg parameters in `pattern_analysis` method
   - refactor command line tool mainly by replacing `argparse` with `click`
   - new subcommand `recipe` to support customized post-process
