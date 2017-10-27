@@ -4,3 +4,4 @@ promise>=0.4.2
 requests>=2.11.1
 six>=1.10.0
 tqdm>=4.8.4
+click>=6.7

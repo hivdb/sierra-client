@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
 
+from collections import OrderedDict
+
+import requests
 from tqdm import tqdm
 from gql import gql, Client
-from gql.transport.requests import RequestsHTTPTransport
+from gql.transport.http import HTTPTransport
+from graphql.execution import ExecutionResult
+from graphql.language.printer import print_ast
 from requests.exceptions import HTTPError
 
 VERSION = '0.1.3'
@@ -11,6 +16,32 @@ DEFAULT_URL = 'https://hivdb.stanford.edu/graphql'
 
 class ResponseError(Exception):
     pass
+
+
+class RequestsHTTPTransportWOrderedDict(HTTPTransport):
+    def __init__(self, url, timeout=None, **kwargs):
+        super(RequestsHTTPTransportWOrderedDict, self).__init__(url, **kwargs)
+        self.default_timeout = timeout
+
+    def execute(self, document, variable_values=None, timeout=None):
+        query_str = print_ast(document)
+        payload = {
+            'query': query_str,
+            'variables': variable_values or {}
+        }
+        request = requests.post(
+            self.url,
+            json=payload,
+            headers=self.headers,
+            timeout=timeout or self.default_timeout)
+        request.raise_for_status()
+        result = request.json(object_pairs_hook=OrderedDict)
+        assert 'errors' in result or 'data' in result, \
+            'Received non-compatible response "{}"'.format(result)
+        return ExecutionResult(
+            errors=result.get('errors'),
+            data=result.get('data')
+        )
 
 
 class SierraClient(object):
@@ -29,8 +60,8 @@ class SierraClient(object):
     @property
     def client(self):
         if self._client is None:
-            transport = RequestsHTTPTransport(
-                self.url, use_json=True, timeout=300)
+            transport = \
+                RequestsHTTPTransportWOrderedDict(self.url, timeout=300)
             transport.headers = {
                 'Content-Type': 'application/json',
                 'User-Agent': 'sierra-client (python)/{}'.format(VERSION)

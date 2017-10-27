@@ -21,6 +21,8 @@ alignedGeneSequences {
     SDRMs:mutations(filterOptions:[SDRM]) {
         text
     },
+    alignedNAs,
+    alignedAAs,
     prettyPairwise {
         positionLine,
         refAALine,
