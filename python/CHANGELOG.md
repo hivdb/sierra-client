@@ -1,8 +1,11 @@
-## 0.2.0 (development)
+## 0.2.0 (2017-11-14)
+Features:
   - expose HIValg parameters in `pattern_analysis` method
   - refactor command line tool mainly by replacing `argparse` with `click`
   - new subcommand `recipe` to support customized post-process
   - new recipe `alignment` to output aligned sequences (FASTA)
+Bugfix:
+  - fix a bug that sequence header was accidently prepended to the sequence
 
 ## 0.1.2 (2016-12-19)
 
