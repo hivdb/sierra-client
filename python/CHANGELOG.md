@@ -4,6 +4,7 @@ Features:
   - refactor command line tool mainly by replacing `argparse` with `click`
   - new subcommand `recipe` to support customized post-process
   - new recipe `alignment` to output aligned sequences (FASTA)
+
 Bugfix:
   - fix a bug that sequence header was accidently prepended to the sequence
 
