@@ -1,3 +1,7 @@
+## 0.2.1dev
+Features:
+  - add support for Python 3.6
+
 ## 0.2.0 (2017-11-14)
 Features:
   - expose HIValg parameters in `pattern_analysis` method

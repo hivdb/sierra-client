@@ -10,7 +10,7 @@ from graphql.execution import ExecutionResult
 from graphql.language.printer import print_ast
 from requests.exceptions import HTTPError
 
-VERSION = '0.2.0'
+VERSION = '0.2.1dev'
 DEFAULT_URL = 'https://hivdb.stanford.edu/graphql'
 
 
