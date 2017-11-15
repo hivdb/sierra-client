@@ -14,7 +14,7 @@ def load(fp):
                 })
             header = line[1:].strip()
             curseq = ''
-        if line.startswith('#'):
+        elif line.startswith('#'):
             continue
         else:
             curseq += line.strip()
