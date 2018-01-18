@@ -1,6 +1,9 @@
-## 0.2.1dev
+## 0.2.1 (2018-01-18)
 Features:
   - add support for Python 3.6
+
+Bugfix:
+  - fix broken subcommand `pattern`
 
 ## 0.2.0 (2017-11-14)
 Features:
