@@ -38,5 +38,5 @@ def patterns(ctx, patterns, query, output, ugly):
         query = query.read()
     else:
         query = fragments.MUTATIONS_ANALYSIS_DEFAULT
-    result = ctx.obj['CLIENT'].pattern_analysis(patterns, query)
+    result = ctx.obj['CLIENT'].pattern_analysis(ptns, query)
     json.dump(result, output, indent=None if ugly else 2)
