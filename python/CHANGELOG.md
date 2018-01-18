@@ -1,9 +1,12 @@
+## 0.2.2dev
+TODO
+
 ## 0.2.1 (2018-01-18)
 Features:
   - add support for Python 3.6
 
 Bugfix:
-  - fix broken subcommand `pattern`
+  - fix broken subcommand `patterns`
 
 ## 0.2.0 (2017-11-14)
 Features:
@@ -18,7 +21,7 @@ Bugfix:
 ## 0.1.2 (2016-12-19)
 
 Features:
-  - new subcommand `pattern` to analyze multiple lists of mutations
+  - new subcommand `patterns` to analyze multiple lists of mutations
   - new methods `iter_pattern_analysis` and `pattern_analysis` to support
     multiple lists of mutations
   - new method `iter_sequence_analysis` available in `SierraClient`
