@@ -63,7 +63,7 @@ sierrapy fasta fasta1.fasta fasta2.fasta -q path/to/your/query/file.gql
 
 For further infomations on how to write queries in GraphQL, please visit
 [graphql.org/learn][graphql-learn]. For API reference and a playground of HIVDB
-GraphQL service, please visit [hivdb.stanford.edu/page/grapiql][graphiql].
+GraphQL service, please visit [hivdb.stanford.edu/page/graphiql][graphiql].
 
 ### Input Mutations
 
