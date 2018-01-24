@@ -25,9 +25,9 @@ pip install -e "git+https://github.com/hivdb/sierra-client.git#egg=sierrapy&subd
 Usage
 -----
 
-Once installed, a command `sierrapy` is available in the command line. The
-command currently support two main methods to fetch JSON-format drug-resistance
-report from backend service.
+Once installed, a command `sierrapy` is available from the command line. The
+command currently support three main methods to fetch JSON-format
+drug-resistance report from backend service.
 
 ### Input Sequences (FASTA File)
 
@@ -62,13 +62,14 @@ sierrapy fasta fasta1.fasta fasta2.fasta -q path/to/your/query/file.gql
 ```
 
 For further infomations on how to write queries in GraphQL, please visit
-[graphql.org/learn][graphql-learn].
+[graphql.org/learn][graphql-learn]. For API reference and a playground of HIVDB
+GraphQL service, please visit [hivdb.stanford.edu/page/grapiql][graphiql].
 
 ### Input Mutations
 
 This method is corresponding to the [HIVDB "Input Mutations"][hivdb-mutinput]
 tab. It accepts PR, RT, and/or IN mutations based on
-[HIV-1 type B consensus][consensus]. The format of the mutations is not
+[HIV-1 subtype B consensus][consensus]. The format of the mutations is not
 strictly required. Here's a list of examples for valid mutations:
 
 - `PR:E35E_D`, `PRE35_`, `PR:35Insertion`, and `PR35ins` are all valid
@@ -97,8 +98,8 @@ Use the similar command like previous section to retrieve custom result.
 ### Input Patterns
 A pattern is a set (list) of mutations. With this method, you can analyze
 mutations derived from different samples at the same time. The method accepts
-one or more files contained mutations. Each row in the files is considered as
-a pattern. Here's an example of a file contained 2 patterns:
+one or more files contained mutations. Each row in the files represents a
+pattern. Here's an example of a file contained 2 patterns:
 
 ```
 RT:M41L + RT:M184V + RT:L210W + RT:T215Y
@@ -131,4 +132,5 @@ parameter `-q` or `--query`. As we described in the above section.
 [hivdb-mutinput]: https://hivdb.stanford.edu/hivdb/by-mutations/
 [seq-query]: https://raw.githubusercontent.com/hivdb/sierra-client/master/python/sierrapy/fragments/sequence_analysis_default.gql
 [graphql-learn]: http://graphql.org/learn/
+[graphiql]: https://hivdb.stanford.edu/page/graphiql/
 [consensus]: https://hivdb.stanford.edu/page/release-notes/#appendix.1.consensus.b.sequences
