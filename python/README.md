@@ -128,6 +128,7 @@ parameter `-q` or `--query`. As we described in the above section.
 [hivdb]: https://hivdb.stanford.edu/
 [pip]: https://github.com/pypa/get-pip
 [hivdb-seqinput]: https://hivdb.stanford.edu/hivdb/by-sequences/
+[hivdb-mutinput]: https://hivdb.stanford.edu/hivdb/by-mutations/
 [seq-query]: https://raw.githubusercontent.com/hivdb/sierra-client/master/python/sierrapy/fragments/sequence_analysis_default.gql
 [graphql-learn]: http://graphql.org/learn/
 [consensus]: https://hivdb.stanford.edu/page/release-notes/#appendix.1.consensus.b.sequences
