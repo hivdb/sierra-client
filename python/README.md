@@ -2,6 +2,7 @@ SierraPy
 ========
 [![install with pypi](https://img.shields.io/pypi/v/sierrapy.svg)](https://pypi.python.org/pypi/sierrapy)
 [![install with bioconda](https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg?style=flat-square)](https://bioconda.github.io/recipes/sierrapy/README.html)
+[![donation](https://img.shields.io/badge/Donate-Stanford_Giving-green.svg)][donation]
 
 SierraPy package contains a client and a command line program for
 [HIVDB][hivdb] Sierra GraphQL Webservice.
