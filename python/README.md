@@ -127,6 +127,13 @@ sierrapy patterns /path/to/pattern/file.txt -o output.json
 Custom query fragment on object `MutationsAnalysis` can be also specified by
 parameter `-q` or `--query`. As we described in the above section.
 
+Donation
+--------
+
+If you find SierraPy useful and wish to donate to the HIVDB team, you can do
+so through [Stanford Make a Gift][donation] form. Your contribution will be
+greatly appreciated.
+
 
 [hivdb]: https://hivdb.stanford.edu/
 [pip]: https://github.com/pypa/get-pip
@@ -136,3 +143,4 @@ parameter `-q` or `--query`. As we described in the above section.
 [graphql-learn]: http://graphql.org/learn/
 [graphiql]: https://hivdb.stanford.edu/page/graphiql/
 [consensus]: https://hivdb.stanford.edu/page/release-notes/#appendix.1.consensus.b.sequences
+[donation]: https://giving.stanford.edu/goto/shafergift
