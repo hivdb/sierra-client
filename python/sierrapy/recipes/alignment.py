@@ -32,10 +32,12 @@ schema = Schema([{
 
 
 @click.option('--gap-handling', default="hxb2strip",
-              type=click.Choice(['squeeze', 'hxb2strip']),
+              type=click.Choice(['squeeze', 'hxb2strip', 'hxb2stripkeepins']),
               help=('Specify how you want the recipe to handle the gaps.\n\n'
                     'Specify "squeeze" to keep every gap in the result '
-                    'alignment; "hxb2_strip" to strip out non-HXB2 columns.'))
+                    'alignment; "hxb2strip" to strip out non-HXB2 columns; '
+                    '"hxb2stripkeepins" to strip not non-HXB2 columns except '
+                    'codon insertions.'))
 @click.pass_context
 def alignment(ctx, gap_handling):
     """Export aligned pol sequences from Sierra result."""
@@ -55,12 +57,23 @@ def alignment(ctx, gap_handling):
             if geneseq:
                 first_aa = geneseq['firstAA']
                 last_aa = geneseq['lastAA']
-                naseq = geneseq['alignedNAs']
+                if gap_handling.endswith('keepins'):
+                    naseq = []
+                    posline = geneseq['prettyPairwise']['positionLine']
+                    naline = geneseq['prettyPairwise']['alignedNAsLine']
+                    for pos, nas in zip(posline, naline):
+                        if not pos.strip() and ' ' in nas:
+                            # fs insertions
+                            continue
+                        naseq.append(nas)
+                    naseq = ''.join(naseq)
+                else:
+                    naseq = geneseq['alignedNAs']
             else:
                 first_aa = 1
                 last_aa = genesize
                 naseq = '.' * genesize * 3
-            if gap_handling == 'hxb2strip':
+            if gap_handling.startswith('hxb2strip'):
                 naseq = (('.' * (first_aa - 1) * 3) +
                          naseq +
                          '.' * (genesize - last_aa) * 3)
