@@ -1,0 +1,40 @@
+name
+bestMatchingSubtype {
+    display
+    referenceAccession
+}
+availableGenes { name }
+minPrevalence
+allGeneSequenceReads {
+    firstAA lastAA
+    gene { name, length }
+    mutations {
+        consensus,
+        position,
+        AAs,
+        isInsertion,
+        isDeletion,
+        isApobecDRM
+    }
+}
+drugResistance {
+    version { text, publishDate },
+    gene { name },
+    drugScores {
+        drugClass { name },
+        drug {
+            name,
+            displayAbbr,
+        },
+        score,
+        partialScores {
+            mutations {
+                text,
+                primaryType,
+                comments { type, text }
+            },
+            score
+        },
+        text
+    }
+}
