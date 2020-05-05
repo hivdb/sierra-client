@@ -17,10 +17,12 @@ def cli(ctx, url, version):
     client = ctx.obj['CLIENT'] = SierraClient(url)
     client.toggle_progress(True)
     if version:
-        result = client.current_version()
+        algv, progv = client.current_version()
         click.echo(
-            'SierraPy {}; HIVdb {} ({})'
-            .format(VERSION, result['text'], result['publishDate']))
+            'SierraPy {}; Sierra {} ({}); HIVdb {} ({})'
+            .format(VERSION,
+                    progv['text'], progv['publishDate'],
+                    algv['text'], algv['publishDate']))
         exit(0)
     elif not ctx.invoked_subcommand:
         click.echo(cli.get_help(ctx))

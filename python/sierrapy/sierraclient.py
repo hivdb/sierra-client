@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import json
 from collections import OrderedDict
 
 import requests
@@ -76,6 +77,7 @@ class SierraClient(object):
             return self.client.execute(
                 document, variable_values=variable_values)
         except HTTPError as e:
+            print(e.response.text)
             errors = [
                 e['exception']['detailMessage']
                 if 'detailMessage' in e['exception']
@@ -84,7 +86,7 @@ class SierraClient(object):
                 if 'exception' in e]
             raise ResponseError(
                 'Sierra GraphQL webservice returned errors:\n - ' +
-                '\n - '.join(errors))
+                json.dumps(errors, indent=4))
 
     def get_introspection(self):
         return self.client.introspection
@@ -139,6 +141,7 @@ class SierraClient(object):
                     viewer {{
                         sequenceReadsAnalysis(
                             sequenceReads:$allSequenceReads
+
                         ) {{
                             ...F0
                         }}
@@ -212,7 +215,12 @@ class SierraClient(object):
                 query sierrapy {
                     viewer {
                         currentVersion { text, publishDate }
+                        currentProgramVersion { text, publishDate }
                     }
                 }
                 """))
-        return result['viewer']['currentVersion']
+        return (result['viewer']['currentVersion'],
+                result['viewer'].get('currentProgramVersion', {
+                    'text': 'Unknown',
+                    'publishDate': 'Unknown'
+                }))

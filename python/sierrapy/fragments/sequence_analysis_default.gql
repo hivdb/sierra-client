@@ -2,6 +2,7 @@ inputSequence {
     header,
     SHA512
 },
+strain,
 subtypeText,
 validationResults {
     level,
@@ -16,7 +17,13 @@ alignedGeneSequences {
         AAs,
         isInsertion,
         isDeletion,
-        isApobecDRM
+        isApobecMutation,
+        isApobecDRM,
+        isUnusual,
+        isSDRM,
+        hasStop,
+        primaryType,
+        text
     },
     SDRMs:mutations(filterOptions:[SDRM]) {
         text
@@ -37,9 +44,10 @@ drugResistance {
         drugClass { name },
         drug {
             name,
-            displayAbbr,
+            displayAbbr
         },
         score,
+        level,
         partialScores {
             mutations {
                 text,

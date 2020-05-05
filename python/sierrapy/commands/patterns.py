@@ -33,6 +33,8 @@ def patterns(ctx, patterns, query, output, ugly):
     ptns = []
     for fp in patterns:
         for line in fp:
+            if line.startswith('#'):
+                continue
             ptns.append(re.split(r'[,;+ \t]+', line.strip()))
     if query:
         query = query.read()

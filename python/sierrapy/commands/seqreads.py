@@ -36,6 +36,7 @@ def parse_seqreads(fp, min_prevalence=-1, min_read_depth=-1):
             {'codon': codon, 'reads': codon_reads})
     return {
         'name': fp.name,
+        'strain': 'HIV1',
         'allReads': sorted(
             gpmap.values(),
             key=lambda pcr: (VALID_GENES.index(pcr['gene']), pcr['position'])),

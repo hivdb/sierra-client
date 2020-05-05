@@ -26,5 +26,5 @@ def fasta(ctx, fasta, query, output, ugly):
         query = query.read()
     else:
         query = fragments.SEQUENCE_ANALYSIS_DEFAULT
-    result = ctx.obj['CLIENT'].sequence_analysis(sequences, query)
+    result = ctx.obj['CLIENT'].sequence_analysis(sequences, query, 100)
     json.dump(result, output, indent=None if ugly else 2)
