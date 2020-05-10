@@ -1,8 +1,14 @@
-gql>=0.1.0
-graphql-core<3,>=2
-promise>=0.4.2
-requests>=2.11.1
-six>=1.10.0
-tqdm>=4.8.4
-click>=6.7
-voluptuous>=0.10.5
+-i https://pypi.org/simple
+certifi==2020.4.5.1
+chardet==3.0.4
+click==7.1.2
+gql==0.4.0
+graphql-core==2.3.1
+idna==2.9
+promise==2.3
+requests==2.23.0
+rx==1.6.1
+six==1.14.0
+tqdm==4.46.0
+urllib3==1.25.9
+voluptuous==0.11.7

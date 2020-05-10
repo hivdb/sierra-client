@@ -1,0 +1,20 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+sierrapy = {editable = true,path = "."}
+
+[packages]
+gql = "*"
+graphql-core = "*"
+promise = "*"
+requests = "*"
+six = "*"
+tqdm = "*"
+click = "*"
+voluptuous = "*"
+
+[requires]
+python_version = "3.7"

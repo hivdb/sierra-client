@@ -1,48 +1,18 @@
 # -*- coding: utf-8 -*-
 
 import json
-from collections import OrderedDict
 
-import requests
 from tqdm import tqdm
 from gql import gql, Client
-from gql.transport.http import HTTPTransport
-from graphql.execution import ExecutionResult
-from graphql.language.printer import print_ast
+from gql.transport.requests import RequestsHTTPTransport
 from requests.exceptions import HTTPError
 
-VERSION = '0.2.2dev'
+VERSION = '0.3.0'
 DEFAULT_URL = 'https://hivdb.stanford.edu/graphql'
 
 
 class ResponseError(Exception):
     pass
-
-
-class RequestsHTTPTransportWOrderedDict(HTTPTransport):
-    def __init__(self, url, timeout=None, **kwargs):
-        super(RequestsHTTPTransportWOrderedDict, self).__init__(url, **kwargs)
-        self.default_timeout = timeout
-
-    def execute(self, document, variable_values=None, timeout=None):
-        query_str = print_ast(document)
-        payload = {
-            'query': query_str,
-            'variables': variable_values or {}
-        }
-        request = requests.post(
-            self.url,
-            json=payload,
-            headers=self.headers,
-            timeout=timeout or self.default_timeout)
-        request.raise_for_status()
-        result = request.json(object_pairs_hook=OrderedDict)
-        assert 'errors' in result or 'data' in result, \
-            'Received non-compatible response "{}"'.format(result)
-        return ExecutionResult(
-            errors=result.get('errors'),
-            data=result.get('data')
-        )
 
 
 class SierraClient(object):
@@ -62,9 +32,8 @@ class SierraClient(object):
     def client(self):
         if self._client is None:
             transport = \
-                RequestsHTTPTransportWOrderedDict(self.url, timeout=300)
+                RequestsHTTPTransport(self.url, use_json=True, timeout=300)
             transport.headers = {
-                'Content-Type': 'application/json',
                 'User-Agent': 'sierra-client (python)/{}'.format(VERSION)
             }
             self._client = Client(
@@ -95,10 +64,8 @@ class SierraClient(object):
         result = self.execute(
             gql("""
                 query sierrapy($sequences:[UnalignedSequenceInput]!) {{
-                    viewer {{
-                        sequenceAnalysis(sequences:$sequences) {{
-                            ...F0
-                        }}
+                    sequenceAnalysis(sequences:$sequences) {{
+                        ...F0
                     }}
                 }}
                 fragment F0 on SequenceAnalysis {{
@@ -106,25 +73,30 @@ class SierraClient(object):
                 }}
                 """.format(query=query)),
             variable_values={"sequences": sequences})
-        return result['viewer']['sequenceAnalysis']
+        return result['sequenceAnalysis']
 
-    def _pattern_analysis(self, patterns, query, **kw):
+    def _pattern_analysis(self, patterns, pattern_names, query, **kw):
         enable_hivalg = 'algorithms' in kw or 'customAlgorithms' in kw
         extraparams = ''
         if enable_hivalg:
-            extraparams = (', $algorithms:[ASIAlgorithm], '
-                           '$customAlgorithms: [CustomASIAlgorithm]')
-        variables = {"patterns": patterns}
+            extraparams = ('$algorithms:[ASIAlgorithm] '
+                           '$customAlgorithms:[CustomASIAlgorithm]')
+        variables = {"patterns": patterns, "patternNames": pattern_names}
         if enable_hivalg:
             variables['algorithms'] = kw.get('algorithms')
             variables['customAlgorithms'] = kw.get('custom_algorithms')
         result = self.execute(
             gql("""
-                query sierrapy($patterns:[[String]!]!{extraparams}) {{
-                    viewer {{
-                        patternAnalysis(patterns:$patterns) {{
-                            ...F0
-                        }}
+                query sierrapy(
+                    $patterns:[[String]!]!
+                    $patternNames:[String]
+                    {extraparams}
+                ) {{
+                    patternAnalysis(
+                        patterns:$patterns
+                        patternNames:$patternNames
+                    ) {{
+                        ...F0
                     }}
                 }}
                 fragment F0 on MutationsAnalysis {{
@@ -132,19 +104,17 @@ class SierraClient(object):
                 }}
                 """.format(query=query, extraparams=extraparams)),
             variable_values=variables)
-        return result['viewer']['patternAnalysis']
+        return result['patternAnalysis']
 
     def _sequence_reads_analysis(self, all_sequence_reads, query):
         result = self.execute(
             gql("""
                 query sierrapy($allSequenceReads:[SequenceReadsInput]!) {{
-                    viewer {{
-                        sequenceReadsAnalysis(
-                            sequenceReads:$allSequenceReads
+                    sequenceReadsAnalysis(
+                        sequenceReads:$allSequenceReads
 
-                        ) {{
-                            ...F0
-                        }}
+                    ) {{
+                        ...F0
                     }}
                 }}
                 fragment F0 on SequenceReadsAnalysis {{
@@ -152,7 +122,7 @@ class SierraClient(object):
                 }}
                 """.format(query=query)),
             variable_values={"allSequenceReads": all_sequence_reads})
-        return result['viewer']['sequenceReadsAnalysis']
+        return result['sequenceReadsAnalysis']
 
     def iter_sequence_analysis(self, sequences, query, step=20):
         if self._progress:
@@ -163,13 +133,18 @@ class SierraClient(object):
             sequences = sequences[step:]
             self._progress and pbar.update(step)
 
-    def iter_pattern_analysis(self, patterns, query, step=20, **kw):
+    def iter_pattern_analysis(self, patterns, pattern_names,
+                              query, step=20, **kw):
+        assert len(patterns) == len(pattern_names)
         if self._progress:
             pbar = tqdm(total=len(patterns))
         while patterns:
-            for result in self._pattern_analysis(patterns[:step], query, **kw):
+            for result in self._pattern_analysis(
+                patterns[:step], pattern_names[:step], query, **kw
+            ):
                 yield result
             patterns = patterns[step:]
+            pattern_names = pattern_names[step:]
             self._progress and pbar.update(step)
 
     def iter_sequence_reads_analysis(self, sequence_reads, query, step=20):
@@ -196,10 +171,8 @@ class SierraClient(object):
         result = self.execute(
             gql("""
                 query sierrapy($mutations:[String]!) {{
-                    viewer {{
-                        mutationsAnalysis(mutations:$mutations) {{
-                            ...F0
-                        }}
+                    mutationsAnalysis(mutations:$mutations) {{
+                        ...F0
                     }}
                 }}
                 fragment F0 on MutationsAnalysis {{
@@ -207,20 +180,18 @@ class SierraClient(object):
                 }}
                 """.format(query=query)),
             variable_values={"mutations": mutations})
-        return result['viewer']['mutationsAnalysis']
+        return result['mutationsAnalysis']
 
     def current_version(self):
         result = self.execute(
             gql("""
                 query sierrapy {
-                    viewer {
-                        currentVersion { text, publishDate }
-                        currentProgramVersion { text, publishDate }
-                    }
+                    currentVersion { text, publishDate }
+                    currentProgramVersion { text, publishDate }
                 }
                 """))
-        return (result['viewer']['currentVersion'],
-                result['viewer'].get('currentProgramVersion', {
+        return (result['currentVersion'],
+                result.get('currentProgramVersion', {
                     'text': 'Unknown',
                     'publishDate': 'Unknown'
                 }))

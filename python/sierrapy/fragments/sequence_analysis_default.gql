@@ -2,7 +2,7 @@ inputSequence {
     header,
     SHA512
 },
-strain,
+strain { name },
 subtypeText,
 validationResults {
     level,

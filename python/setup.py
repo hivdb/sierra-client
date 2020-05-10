@@ -14,6 +14,8 @@ with open('sierrapy/sierraclient.py', 'rb') as f:
 
 
 def strip_comments(l):
+    if l.startswith('-i '):
+        return ''
     return l.split('#', 1)[0].strip()
 
 

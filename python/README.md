@@ -105,7 +105,9 @@ one or more files contained mutations. Each row in the files represents a
 pattern. Here's an example of a file contained 2 patterns:
 
 ```
+> patient 1
 RT:M41L + RT:M184V + RT:L210W + RT:T215Y
+> patient 2
 PR:L24I + PR:M46L + PR:I54V + PR:V82A
 ```
 

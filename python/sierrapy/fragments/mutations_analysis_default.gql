@@ -1,28 +1,29 @@
+name
 validationResults {
-    level,
-    message
-},
+  level
+  message
+}
 drugResistance {
-    version { text, publishDate },
-    gene { name },
-    drugScores {
-        drugClass { name },
-        drug {
-            name,
-            displayAbbr,
-        },
-        score,
-        partialScores {
-            mutations {
-                consensus,
-                position,
-                AAs,
-                text,
-                primaryType,
-                comments { type, text }
-            },
-            score
-        },
-        text
+  version { text, publishDate }
+  gene { name }
+  drugScores {
+    drugClass { name }
+    drug {
+      name
+      displayAbbr
     }
+    score
+    partialScores {
+      mutations {
+        consensus
+        position
+        AAs
+        text
+        primaryType
+        comments { type text }
+      }
+      score
+    }
+    text
+  }
 }
