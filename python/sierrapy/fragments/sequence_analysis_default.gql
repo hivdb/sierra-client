@@ -52,7 +52,7 @@ drugResistance {
             mutations {
                 text,
                 primaryType,
-                comments { type, text }
+                comments { triggeredAAs, type, text }
             },
             score
         },
