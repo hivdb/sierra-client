@@ -10,7 +10,22 @@ from ..sierraclient import SierraClient
 from .cli import cli
 from .options import url_option
 
-VALID_GENES = ['PR', 'RT', 'IN']
+VALID_GENES = ['PR', 'RT', 'IN', 'POL']
+
+
+def normalize_position(gene, pos):
+    if gene == 'POL':
+        pos -= 56
+        if pos < 1:
+            return None, None
+        elif pos < 1 + 99:
+            return 'PR', pos
+        elif pos < 1 + 99 + 560:
+            return 'RT', pos - 99
+        else:
+            return 'IN', pos - 99 - 560
+    else:
+        return gene, pos
 
 
 def normalize_gene(gene):
@@ -20,11 +35,18 @@ def normalize_gene(gene):
         return 'RT'
     elif re.match(r'^\s*(IN|INT|integrase)\s*$', gene, re.I):
         return 'IN'
+    elif re.match(r'^\s*(pol)\s*$', gene, re.I):
+        return 'POL'
 
 
 def parse_seqreads(fp, min_prevalence=-1, min_read_depth=-1):
     gpmap = {}
-    for row in csv.reader(fp, delimiter='\t'):
+    firstrow = fp.readline()
+    delimiter = ','
+    if '\t' in firstrow:
+        delimiter = '\t'
+    fp.seek(0)
+    for row in csv.reader(fp, delimiter=delimiter):
         num_cols = len(row)
         if num_cols >= 5:
             gene, aapos, total_reads, codon, codon_reads = row[:5]
@@ -37,7 +59,13 @@ def parse_seqreads(fp, min_prevalence=-1, min_read_depth=-1):
                 not total_reads.isdigit() or len(codon) < 3 or \
                 not codon_reads.isdigit():
             continue
-        aapos = int(aapos)
+        try:
+            aapos = int(aapos)
+        except (TypeError, ValueError):
+            continue
+        gene, aapos = normalize_position(gene, aapos)
+        if (gene is None):
+            continue
         total_reads = int(total_reads)
         codon_reads = int(codon_reads)
         gpkey = (gene, aapos)
@@ -64,16 +92,18 @@ def parse_seqreads(fp, min_prevalence=-1, min_read_depth=-1):
 @cli.command()
 @click.argument('seqreads', nargs=-1, type=click.File('r'), required=True)
 @url_option('--url')
-@click.option('-p', '--cutoff', type=float, default=-1,
-              help=('Minimal prevalence cutoff applied on the sequence reads'))
+@click.option('-p', '--cutoff', type=float, default=-1, show_default=True,
+              help=('Minimal prevalence cutoff applied on the sequence reads '
+                    '(range: 0-1.0)'))
 @click.option('-d', '--min-read-depth', type=int, default=-1,
+              show_default=True,
               help=('Minimal read depth applied to '
                     'each codon of this sequence'))
-@click.option('-q', '--query', type=click.File('r'),
+@click.option('-q', '--query', type=click.File('r'), show_default=True,
               help=('A file contains GraphQL fragment definition '
                     'on `SequenceAnalysis`.'))
 @click.option('-o', '--output', default='-', type=click.File('w'),
-              help='File path to store the JSON result.')
+              show_default=True, help='File path to store the JSON result.')
 @click.option('--ugly', is_flag=True, help='Output compressed JSON result.')
 @click.pass_context
 def seqreads(ctx, url, seqreads, cutoff, min_read_depth, query, output, ugly):

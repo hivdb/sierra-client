@@ -4,17 +4,63 @@ bestMatchingSubtype {
     referenceAccession
 }
 availableGenes { name }
+minReadDepth
 minPrevalence
+readDepthStats {
+    mean standardDeviation min max n
+    p5: percentile(p: 5)
+    p10: percentile(p: 10)
+    p25: percentile(p: 25)
+    p50: percentile(p: 50)
+    p75: percentile(p: 75)
+    p90: percentile(p: 90)
+    p95: percentile(p: 95)
+}
 allGeneSequenceReads {
     firstAA lastAA
     gene { name, length }
     mutations {
-        consensus,
+        reference,
         position,
         AAs,
         isInsertion,
         isDeletion,
+        isApobecMutation,
+        isUnsequenced,
+        isUnusual,
         isApobecDRM
+    }
+}
+histogram(binTicks: [0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2]) {
+    usualSites {
+        percentStart
+        percentStop
+        count
+    }
+    drmSites {
+        percentStart
+        percentStop
+        count
+    }
+    unusualSites {
+        percentStart
+        percentStop
+        count
+    }
+    apobecSites {
+        percentStart
+        percentStop
+        count
+    }
+    apobecDrmSites {
+        percentStart
+        percentStop
+        count
+    }
+    stopCodonSites {
+        percentStart
+        percentStop
+        count
     }
 }
 drugResistance {
@@ -35,6 +81,7 @@ drugResistance {
             },
             score
         },
+        level,
         text
     }
 }
