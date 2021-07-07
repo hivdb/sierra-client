@@ -146,4 +146,4 @@ greatly appreciated.
 [graphql-learn]: http://graphql.org/learn/
 [graphiql]: https://hivdb.stanford.edu/page/graphiql/
 [consensus]: https://hivdb.stanford.edu/page/release-notes/#appendix.1.consensus.b.sequences
-[donation]: https://giving.stanford.edu/goto/shafergift
+[donation]: https://makeagift.stanford.edu/goto/shafergift
