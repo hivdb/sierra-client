@@ -16,6 +16,16 @@ readDepthStats {
     p90: percentile(p: 90)
     p95: percentile(p: 95)
 }
+readDepthStatsDRP {
+    mean standardDeviation min max n
+    p5: percentile(p: 5)
+    p10: percentile(p: 10)
+    p25: percentile(p: 25)
+    p50: percentile(p: 50)
+    p75: percentile(p: 75)
+    p90: percentile(p: 90)
+    p95: percentile(p: 95)
+}
 allGeneSequenceReads {
     firstAA lastAA
     gene { name, length }
