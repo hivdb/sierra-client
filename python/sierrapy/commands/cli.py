@@ -2,16 +2,25 @@ import click  # type: ignore
 
 from ..sierraclient import SierraClient, VERSION
 
-from .options import url_option
+from .options import url_option, virus_option
 
 
 @click.group(invoke_without_command=True)
 @url_option('--url')
+@virus_option('--virus')
 @click.option('--version', is_flag=True,
               help='Show client and the HIVDB algorithm version.')
 @click.pass_context
-def cli(ctx: click.Context, url: str, version: bool) -> None:
-    """A Client of HIVDB Sierra GraphQL Web Service"""
+def cli(ctx: click.Context, url: str, virus: str, version: bool) -> None:
+    """A Client of HIVDB Sierra GraphQL Web Service
+
+    Default endpoint URLs:
+
+    \b
+    - HIV1: https://hivdb.stanford.edu/graphql
+    - HIV2: https://hivdb.stanford.edu/hiv2/graphql
+    - SARS2: https://covdb.stanford.edu/sierra-sars2/graphql
+    """
     client: SierraClient = SierraClient(url)
     client.toggle_progress(True)
     if version:

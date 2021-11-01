@@ -1,4 +1,6 @@
-from typing import TypedDict, List
+from __future__ import annotations
+import re
+from typing import TypedDict, List, Tuple
 
 
 class CodonReads(TypedDict):
@@ -63,3 +65,19 @@ class AlignedGeneSeq(TypedDict):
 class SequenceResult(TypedDict):
     inputSequence: InputSequence
     alignedGeneSequences: List[AlignedGeneSeq]
+
+
+class TargetGeneDef(TypedDict):
+    name: str
+    offset: int
+    range: Tuple[int, int]
+
+
+class _GeneDefRequired(TypedDict):
+    # TODO: this hack will be eventually replaced by PEP 655
+    name: str
+    synonym_pattern: re.Pattern
+
+
+class GeneDef(_GeneDefRequired, total=False):
+    target_genes: List[TargetGeneDef]
