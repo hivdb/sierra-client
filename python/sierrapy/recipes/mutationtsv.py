@@ -1,19 +1,24 @@
-# -*- coding: utf-8 -*-
-
+import _csv
 import csv
 import json
-import click
+import click  # type: ignore
 from collections import OrderedDict
-from voluptuous import Schema, Required, MultipleInvalid, ALLOW_EXTRA
+from typing import OrderedDict as tOrderedDict, TextIO, List, Dict, Optional
+from voluptuous import (  # type: ignore
+    Schema, Required, MultipleInvalid, ALLOW_EXTRA
+)
 
-GENES = OrderedDict([
+from ..common_types import SequenceResult, AlignedGeneSeq
+
+
+GENES: tOrderedDict[str, int] = OrderedDict([
     ('PR', 99),
     ('RT', 560),
     ('IN', 288)
 ])
 
 
-schema = Schema([{
+schema: Schema = Schema([{
     Required('inputSequence'): {
         Required('header'): str
     },
@@ -31,15 +36,22 @@ schema = Schema([{
 
 
 @click.pass_context
-def mutationtsv(ctx):
+def mutationtsv(ctx: click.Context) -> None:
     """Export mutation set of each sequences from Sierra result."""
-    output = ctx.obj['OUTPUT']
-    sequences = json.load(ctx.obj['INPUT'])
+    seq: SequenceResult
+    seqheader: str
+    geneseqs: Dict[str, AlignedGeneSeq]
+    row: List[str]
+    gene: str
+    geneseq: Optional[AlignedGeneSeq]
+    mutations: str
+    output: TextIO = ctx.obj['OUTPUT']
+    sequences: List[SequenceResult] = json.load(ctx.obj['INPUT'])
     try:
         schema(sequences)
     except MultipleInvalid as e:
         raise click.ClickException(str(e))
-    writer = csv.writer(output, delimiter='\t')
+    writer: _csv._writer = csv.writer(output, delimiter='\t')
     writer.writerow(['Header'] + ['{} Mutations'.format(gene)
                                   for gene in GENES.keys()])
     for seq in sequences:

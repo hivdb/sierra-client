@@ -3,25 +3,39 @@
 
 import os
 import re
+import sys
 import ast
-import setuptools
+import setuptools  # type: ignore
 
-_version_re = re.compile(r'VERSION\s+=\s+(.*)')
+from typing import Optional, List
+
+
+_version_re: re.Pattern = re.compile(r'VERSION\s+=\s+(.*)')
 
 with open('sierrapy/sierraclient.py', 'rb') as f:
-    version = str(ast.literal_eval(_version_re.search(
-        f.read().decode('utf-8')).group(1)))
+    ver_match: Optional[re.Match] = _version_re.search(
+        f.read().decode('utf-8')
+    )
+    if not ver_match:
+        print(
+            'Unable to find version from sierrapy/sierraclient.py',
+            file=sys.stderr
+        )
+        exit(1)
+    version: str = str(ast.literal_eval(ver_match.group(1)))
 
 
-def strip_comments(l):
-    if l.startswith('-i '):
+def strip_comments(line: str) -> str:
+    if line.startswith('-i '):
         return ''
-    return l.split('#', 1)[0].strip()
+    return line.split('#', 1)[0].strip()
 
 
-def req(filename):
+def req(filename: str) -> List[str]:
+    ln: str
+    requires: set
     with open(os.path.join(os.getcwd(), filename)) as fp:
-        requires = set([strip_comments(l) for l in fp.readlines()])
+        requires = set([strip_comments(ln) for ln in fp.readlines()])
         requires -= set([''])
     return list(requires)
 

@@ -1,10 +1,11 @@
-# -*- coding: utf-8 -*-
-import click
+import click  # type: ignore
 import json
 from itertools import chain
+from typing import List, Dict, TextIO, Any
 
 from .. import fastareader, fragments
 from ..sierraclient import SierraClient
+from ..common_types import Sequence
 
 from .cli import cli
 from .options import url_option
@@ -20,17 +21,29 @@ from .options import url_option
               help='File path to store the JSON result.')
 @click.option('--ugly', is_flag=True, help='Output compressed JSON result.')
 @click.pass_context
-def fasta(ctx, url, fasta, query, output, ugly):
+def fasta(
+    ctx: click.Context,
+    url: str,
+    fasta: List[TextIO],
+    query: TextIO,
+    output: TextIO,
+    ugly: bool
+) -> None:
     """
     Run alignment, drug resistance and other analysis for one or more
     FASTA-format files contained HIV-1 pol DNA sequences.
     """
-    client = SierraClient(url)
+    query_text: str
+    client: SierraClient = SierraClient(url)
     client.toggle_progress(True)
-    sequences = list(chain(*[fastareader.load(fp) for fp in fasta]))
+    sequences: List[Sequence] = list(
+        chain(*[fastareader.load(fp) for fp in fasta])
+    )
     if query:
-        query = query.read()
+        query_text = query.read()
     else:
-        query = fragments.SEQUENCE_ANALYSIS_DEFAULT
-    result = client.sequence_analysis(sequences, query, 100)
+        query_text = fragments.SEQUENCE_ANALYSIS_DEFAULT
+    result: List[
+        Dict[str, Any]
+    ] = client.sequence_analysis(sequences, query_text, 100)
     json.dump(result, output, indent=None if ugly else 2)

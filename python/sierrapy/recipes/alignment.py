@@ -1,18 +1,28 @@
-# -*- coding: utf-8 -*-
-
 import json
-import click
+import click  # type: ignore
 from collections import OrderedDict
-from voluptuous import Schema, Required, MultipleInvalid, ALLOW_EXTRA
+from typing import (
+    List,
+    Dict,
+    TextIO,
+    Optional,
+    OrderedDict as tOrderedDict
+)
 
-GENES = OrderedDict([
+from voluptuous import (  # type: ignore
+    Schema, Required, MultipleInvalid, ALLOW_EXTRA
+)
+
+from ..common_types import SequenceResult, AlignedGeneSeq
+
+GENES: tOrderedDict = OrderedDict([
     ('PR', 99),
     ('RT', 560),
     ('IN', 288)
 ])
 
 
-schema = Schema([{
+schema: Schema = Schema([{
     Required('inputSequence'): {
         Required('header'): str
     },
@@ -39,10 +49,24 @@ schema = Schema([{
                     '"hxb2stripkeepins" to strip not non-HXB2 columns except '
                     'codon insertions.'))
 @click.pass_context
-def alignment(ctx, gap_handling):
+def alignment(ctx: click.Context, gap_handling: str) -> None:
     """Export aligned pol sequences from Sierra result."""
-    output = ctx.obj['OUTPUT']
-    sequences = json.load(ctx.obj['INPUT'])
+    seqheader: str
+    concat_seqs: str
+    geneseqs: Dict[str, AlignedGeneSeq]
+    gene: str
+    genesize: int
+    geneseq: Optional[AlignedGeneSeq]
+    first_aa: int
+    last_aa: int
+    naseq: List[str]
+    posline: List[str]
+    naline: List[str]
+    pos: str
+    nas: str
+    naseq_text: str
+    output: TextIO = ctx.obj['OUTPUT']
+    sequences: List[SequenceResult] = json.load(ctx.obj['INPUT'])
     try:
         schema(sequences)
     except MultipleInvalid as e:
@@ -66,18 +90,20 @@ def alignment(ctx, gap_handling):
                             # fs insertions
                             continue
                         naseq.append(nas)
-                    naseq = ''.join(naseq)
+                    naseq_text = ''.join(naseq)
                 else:
-                    naseq = geneseq['alignedNAs']
+                    naseq_text = geneseq['alignedNAs']
             else:
                 first_aa = 1
                 last_aa = genesize
-                naseq = '.' * genesize * 3
+                naseq_text = '.' * genesize * 3
             if gap_handling.startswith('hxb2strip'):
-                naseq = (('.' * (first_aa - 1) * 3) +
-                         naseq +
-                         '.' * (genesize - last_aa) * 3)
+                naseq_text = (
+                    ('.' * (first_aa - 1) * 3) +
+                    naseq_text +
+                    '.' * (genesize - last_aa) * 3
+                )
             else:  # gap_handling == 'squeeze'
                 raise NotImplementedError()
-            concat_seqs += naseq
+            concat_seqs += naseq_text
         output.write('>{}\n{}\n'.format(seqheader, concat_seqs))

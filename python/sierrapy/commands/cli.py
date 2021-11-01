@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-import click
+import click  # type: ignore
 
 from ..sierraclient import SierraClient, VERSION
 
@@ -11,9 +10,9 @@ from .options import url_option
 @click.option('--version', is_flag=True,
               help='Show client and the HIVDB algorithm version.')
 @click.pass_context
-def cli(ctx, url, version):
+def cli(ctx: click.Context, url: str, version: bool) -> None:
     """A Client of HIVDB Sierra GraphQL Web Service"""
-    client = SierraClient(url)
+    client: SierraClient = SierraClient(url)
     client.toggle_progress(True)
     if version:
         algv, progv = client.current_version()

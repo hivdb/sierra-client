@@ -1,5 +1,6 @@
-# -*- coding: utf-8 -*-
-import click
+import click  # type: ignore
+
+from typing import TextIO
 
 from .cli import cli
 from .. import recipes
@@ -11,7 +12,7 @@ from .. import recipes
 @click.option('--output', default='-', type=click.File('w'),
               help='File path to store the result.')
 @click.pass_context
-def recipe(ctx, input, output):
+def recipe(ctx: click.Context, input: TextIO, output: TextIO) -> None:
     """Post process Sierra web service output."""
     ctx.obj['INPUT'] = input
     ctx.obj['OUTPUT'] = output

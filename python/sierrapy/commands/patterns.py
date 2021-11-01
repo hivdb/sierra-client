@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 import re
 import json
-import click
+import click  # type: ignore
+from typing import List, Dict, Any, TextIO, Optional
 
 from .. import fragments
 from ..sierraclient import SierraClient
@@ -20,7 +21,14 @@ from .options import url_option
               help='File path to store the JSON result.')
 @click.option('--ugly', is_flag=True, help='Output compressed JSON result.')
 @click.pass_context
-def patterns(ctx, url, patterns, query, output, ugly):
+def patterns(
+    ctx: click.Context,
+    url: str,
+    patterns: List[TextIO],
+    query: TextIO,
+    output: TextIO,
+    ugly: bool
+) -> None:
     """
     Run drug resistance and other analysis for one or more files contains
     lines of PR, RT and/or IN mutations based on HIV-1 type B consensus.
@@ -36,11 +44,14 @@ def patterns(ctx, url, patterns, query, output, ugly):
     semicolon(;), whitespaces and tabs. The consensus sequences can be
     retrieved from HIVDB website: <https://goo.gl/ZBthkt>.
     """
-    client = SierraClient(url)
+    client: SierraClient = SierraClient(url)
     client.toggle_progress(True)
 
-    ptn_names = []
-    ptns = []
+    fp: TextIO
+    query_text: str
+    ptn_name: Optional[str]
+    ptn_names: List[Optional[str]] = []
+    ptns: List[List[str]] = []
     for fp in patterns:
         ptn_name = None
         for line in fp:
@@ -53,8 +64,10 @@ def patterns(ctx, url, patterns, query, output, ugly):
             ptns.append(re.split(r'[,;+ \t]+', line.strip()))
             ptn_name = None
     if query:
-        query = query.read()
+        query_text = query.read()
     else:
-        query = fragments.MUTATIONS_ANALYSIS_DEFAULT
-    result = client.pattern_analysis(ptns, ptn_names, query)
+        query_text = fragments.MUTATIONS_ANALYSIS_DEFAULT
+    result: List[
+        Dict[str, Any]
+    ] = client.pattern_analysis(ptns, ptn_names, query_text)
     json.dump(result, output, indent=None if ugly else 2)

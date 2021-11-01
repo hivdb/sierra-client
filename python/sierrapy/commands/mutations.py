@@ -1,6 +1,6 @@
-# -*- coding: utf-8 -*-
 import json
-import click
+import click  # type: ignore
+from typing import List, Dict, TextIO, Any
 
 from .. import fragments
 from ..sierraclient import SierraClient
@@ -19,7 +19,14 @@ from .options import url_option
               help='File path to store the JSON result.')
 @click.option('--ugly', is_flag=True, help='Output compressed JSON result.')
 @click.pass_context
-def mutations(ctx, url, mutations, query, output, ugly):
+def mutations(
+    ctx: click.Context,
+    url: str,
+    mutations: List[str],
+    query: TextIO,
+    output: TextIO,
+    ugly: bool
+) -> None:
     """
     Run drug resistance and other analysis for PR, RT and/or IN mutations.
     For Example:
@@ -30,11 +37,12 @@ def mutations(ctx, url, mutations, query, output, ugly):
     Use command "sierrapy patterns" instead if you want to run multiple sets
     of mutations in one request.
     """
-    client = SierraClient(url)
+    query_text: str
+    client: SierraClient = SierraClient(url)
     client.toggle_progress(True)
     if query:
-        query = query.read()
+        query_text = query.read()
     else:
-        query = fragments.MUTATIONS_ANALYSIS_DEFAULT
-    result = client.mutations_analysis(mutations, query)
+        query_text = fragments.MUTATIONS_ANALYSIS_DEFAULT
+    result: Dict[str, Any] = client.mutations_analysis(mutations, query_text)
     json.dump(result, output, indent=None if ugly else 2)

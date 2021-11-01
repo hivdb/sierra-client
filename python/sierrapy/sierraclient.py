@@ -1,13 +1,18 @@
 # -*- coding: utf-8 -*-
 
 import json
+from typing import Optional, Dict, Any, Union, List, Generator, Tuple
 
-from tqdm import tqdm
-from gql import gql, Client
-from gql.transport.requests import RequestsHTTPTransport
-from requests.exceptions import HTTPError
+from tqdm import tqdm  # type: ignore
+from gql import gql, Client  # type: ignore
+from gql.transport.requests import RequestsHTTPTransport  # type: ignore
+from requests.exceptions import HTTPError  # type: ignore
+from graphql.language.ast import Document as gqlDocument  # type: ignore
 
-VERSION = '0.3.0'
+from .common_types import Sequence, SeqReads, ServerVer
+
+
+VERSION = '0.4.0'
 DEFAULT_URL = 'https://hivdb.stanford.edu/graphql'
 
 
@@ -15,23 +20,26 @@ class ResponseError(Exception):
     pass
 
 
-class SierraClient(object):
+class SierraClient:
+    url: str
+    _client: Optional[Client]
+    _progress: bool
 
-    def __init__(self, url=DEFAULT_URL):
+    def __init__(self, url: str = DEFAULT_URL):
         self.url = url
         self._client = None
         self._progress = False
 
-    def toggle_progress(self, flag='auto'):
+    def toggle_progress(self, flag: Union[bool, str] = 'auto') -> None:
         if flag == 'auto':
             self._progress = not self._progress
         else:
             self._progress = bool(flag)
 
     @property
-    def client(self):
+    def client(self) -> Client:
         if self._client is None:
-            transport = \
+            transport: RequestsHTTPTransport = \
                 RequestsHTTPTransport(self.url, use_json=True, timeout=300)
             transport.headers = {
                 'User-Agent': 'sierra-client (python)/{}'.format(VERSION)
@@ -41,10 +49,15 @@ class SierraClient(object):
                 fetch_schema_from_transport=True)
         return self._client
 
-    def execute(self, document, variable_values=None):
+    def execute(
+        self,
+        document: gqlDocument,
+        variable_values: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         try:
-            return self.client.execute(
+            result: Dict[str, Any] = self.client.execute(
                 document, variable_values=variable_values)
+            return result
         except HTTPError as e:
             print(e.response.text)
             errors = [
@@ -57,11 +70,16 @@ class SierraClient(object):
                 'Sierra GraphQL webservice returned errors:\n - ' +
                 json.dumps(errors, indent=4))
 
-    def get_introspection(self):
-        return self.client.introspection
+    def get_introspection(self) -> Dict[str, Any]:
+        result: Dict[str, Any] = self.client.introspection
+        return result
 
-    def _sequence_analysis(self, sequences, query):
-        result = self.execute(
+    def _sequence_analysis(
+        self,
+        sequences: List[Sequence],
+        query: str
+    ) -> List[Dict[str, Any]]:
+        result: Dict[str, Any] = self.execute(
             gql("""
                 query sierrapy($sequences:[UnalignedSequenceInput]!) {{
                     sequenceAnalysis(sequences:$sequences) {{
@@ -73,19 +91,29 @@ class SierraClient(object):
                 }}
                 """.format(query=query)),
             variable_values={"sequences": sequences})
-        return result['sequenceAnalysis']
+        seqResults: List[Dict[str, Any]] = result['sequenceAnalysis']
+        return seqResults
 
-    def _pattern_analysis(self, patterns, pattern_names, query, **kw):
-        enable_hivalg = 'algorithms' in kw or 'customAlgorithms' in kw
-        extraparams = ''
+    def _pattern_analysis(
+        self,
+        patterns: List[List[str]],
+        pattern_names: List[Optional[str]],
+        query: str,
+        **kw: Any
+    ) -> List[Dict[str, Any]]:
+        enable_hivalg: bool = 'algorithms' in kw or 'customAlgorithms' in kw
+        extraparams: str = ''
         if enable_hivalg:
             extraparams = ('$algorithms:[ASIAlgorithm] '
                            '$customAlgorithms:[CustomASIAlgorithm]')
-        variables = {"patterns": patterns, "patternNames": pattern_names}
+        variables: Dict[str, Any] = {
+            "patterns": patterns,
+            "patternNames": pattern_names
+        }
         if enable_hivalg:
             variables['algorithms'] = kw.get('algorithms')
             variables['customAlgorithms'] = kw.get('custom_algorithms')
-        result = self.execute(
+        result: Dict[str, Any] = self.execute(
             gql("""
                 query sierrapy(
                     $patterns:[[String]!]!
@@ -104,10 +132,15 @@ class SierraClient(object):
                 }}
                 """.format(query=query, extraparams=extraparams)),
             variable_values=variables)
-        return result['patternAnalysis']
+        patternResults: List[Dict[str, Any]] = result['patternAnalysis']
+        return patternResults
 
-    def _sequence_reads_analysis(self, all_sequence_reads, query):
-        result = self.execute(
+    def _sequence_reads_analysis(
+        self,
+        all_sequence_reads: List[SeqReads],
+        query: str
+    ) -> List[Dict[str, Any]]:
+        result: Dict[str, Any] = self.execute(
             gql("""
                 query sierrapy($allSequenceReads:[SequenceReadsInput]!) {{
                     sequenceReadsAnalysis(
@@ -122,53 +155,96 @@ class SierraClient(object):
                 }}
                 """.format(query=query)),
             variable_values={"allSequenceReads": all_sequence_reads})
-        return result['sequenceReadsAnalysis']
+        seqReadsResults: List[Dict[str, Any]] = result['sequenceReadsAnalysis']
+        return seqReadsResults
 
-    def iter_sequence_analysis(self, sequences, query, step=20):
+    def iter_sequence_analysis(
+        self,
+        sequences: List[Sequence],
+        query: str,
+        step: int = 20
+    ) -> Generator[Dict[str, Any], None, None]:
+        pbar: Optional[tqdm]
         if self._progress:
             pbar = tqdm(total=len(sequences))
         while sequences:
-            for result in self._sequence_analysis(sequences[:step], query):
-                yield result
+            yield from self._sequence_analysis(sequences[:step], query)
             sequences = sequences[step:]
-            self._progress and pbar.update(step)
+            pbar and pbar.update(step)
 
-    def iter_pattern_analysis(self, patterns, pattern_names,
-                              query, step=20, **kw):
+    def iter_pattern_analysis(
+        self,
+        patterns: List[List[str]],
+        pattern_names: List[Optional[str]],
+        query: str,
+        step: int = 20,
+        **kw: Any
+    ) -> Generator[Dict[str, Any], None, None]:
         assert len(patterns) == len(pattern_names)
+        pbar: Optional[tqdm]
+        result: Dict[str, Any]
         if self._progress:
             pbar = tqdm(total=len(patterns))
         while patterns:
-            for result in self._pattern_analysis(
+            yield from self._pattern_analysis(
                 patterns[:step], pattern_names[:step], query, **kw
-            ):
-                yield result
+            )
             patterns = patterns[step:]
             pattern_names = pattern_names[step:]
-            self._progress and pbar.update(step)
+            pbar and pbar.update(step)
 
-    def iter_sequence_reads_analysis(self, sequence_reads, query, step=20):
+    def iter_sequence_reads_analysis(
+        self,
+        sequence_reads: List[SeqReads],
+        query: str,
+        step: int = 20
+    ) -> Generator[Dict[str, Any], None, None]:
+        pbar: Optional[tqdm]
         if self._progress:
             pbar = tqdm(total=len(sequence_reads))
         while sequence_reads:
-            for result in self._sequence_reads_analysis(
-                    sequence_reads[:step], query):
-                yield result
+            yield from self._sequence_reads_analysis(
+                sequence_reads[:step], query
+            )
             sequence_reads = sequence_reads[step:]
-            self._progress and pbar.update(step)
+            pbar and pbar.update(step)
 
-    def sequence_analysis(self, sequences, query, step=20):
+    def sequence_analysis(
+        self,
+        sequences: List[Sequence],
+        query: str,
+        step: int = 20
+    ) -> List[Dict[str, Any]]:
         return list(self.iter_sequence_analysis(sequences, query, step))
 
-    def pattern_analysis(self, patterns, query, step=20, **kw):
-        return list(self.iter_pattern_analysis(patterns, query, step, **kw))
+    def pattern_analysis(
+        self,
+        patterns: List[List[str]],
+        pattern_names: List[Optional[str]],
+        query: str,
+        step: int = 20,
+        **kw: Any
+    ) -> List[Dict[str, Any]]:
+        return list(self.iter_pattern_analysis(
+            patterns, pattern_names, query, step, **kw
+        ))
 
-    def sequence_reads_analysis(self, sequence_reads, query, step=20):
-        return list(
-            self.iter_sequence_reads_analysis(sequence_reads, query, step))
+    def sequence_reads_analysis(
+        self,
+        sequence_reads: List[SeqReads],
+        query: str,
+        step: int = 20
+    ) -> List[Dict[str, Any]]:
+        return list(self.iter_sequence_reads_analysis(
+            sequence_reads, query, step
+        ))
 
-    def mutations_analysis(self, mutations, query):
-        result = self.execute(
+    def mutations_analysis(
+        self,
+        mutations: List[str],
+        query: str
+    ) -> Dict[str, Any]:
+        result: Dict[str, Any] = self.execute(
             gql("""
                 query sierrapy($mutations:[String]!) {{
                     mutationsAnalysis(mutations:$mutations) {{
@@ -180,9 +256,10 @@ class SierraClient(object):
                 }}
                 """.format(query=query)),
             variable_values={"mutations": mutations})
-        return result['mutationsAnalysis']
+        mutResults: Dict[str, Any] = result['mutationsAnalysis']
+        return mutResults
 
-    def current_version(self):
+    def current_version(self) -> Tuple[ServerVer, ServerVer]:
         result = self.execute(
             gql("""
                 query sierrapy {
