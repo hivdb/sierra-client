@@ -3,19 +3,16 @@ from .. import fragments
 from .virus import Virus
 
 
-HIV1 = Virus(
-    virus_name='HIV1',
+HIV2 = Virus(
+    virus_name='HIV2',
 
-    strain_name='HIV1',
+    strain_name='HIV2A',
 
     supported_commands=[
-        'fasta',
-        'mutations',
-        'patterns',
-        'seqreads'
+        'fasta'
     ],
 
-    default_url='https://hivdb.stanford.edu/graphql',
+    default_url='https://hivdb.stanford.edu/hiv2/graphql',
 
     gene_defs=[
         {
@@ -43,21 +40,18 @@ HIV1 = Virus(
                 {
                     'name': 'RT',
                     'offset': 0,
-                    'range': (100, 660)
+                    'range': (100, 659)
                 },
                 {
                     'name': 'IN',
                     'offset': 0,
-                    'range': (661, 949)
+                    'range': (660, 952)
                 }
             ]
         }
     ],
 
     default_queries={
-        'fasta': fragments.HIV1_SEQUENCE_ANALYSIS_DEFAULT,
-        'mutations': fragments.HIV1_MUTATIONS_ANALYSIS_DEFAULT,
-        'patterns': fragments.HIV1_MUTATIONS_ANALYSIS_DEFAULT,
-        'seqreads': fragments.HIV1_SEQUENCE_READS_ANALYSIS_DEFAULT
+        'fasta': fragments.HIV1_SEQUENCE_ANALYSIS_DEFAULT
     }
 )

@@ -15,7 +15,8 @@ drugResistance {
     score
     partialScores {
       mutations {
-        consensus
+        reference
+        consensus  # deprecated, use reference instead
         position
         AAs
         text

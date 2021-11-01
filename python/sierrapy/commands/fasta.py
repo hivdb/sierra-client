@@ -3,17 +3,18 @@ import json
 from itertools import chain
 from typing import List, Dict, TextIO, Any
 
-from .. import fastareader, fragments
+from .. import fastareader, viruses
 from ..sierraclient import SierraClient
 from ..common_types import Sequence
 
 from .cli import cli
-from .options import url_option
+from .options import url_option, virus_option
 
 
 @cli.command()
 @click.argument('fasta', nargs=-1, type=click.File('r'), required=True)
 @url_option('--url')
+@virus_option('--virus')
 @click.option('-q', '--query', type=click.File('r'),
               help=('A file contains GraphQL fragment definition '
                     'on `SequenceAnalysis`.'))
@@ -24,6 +25,7 @@ from .options import url_option
 def fasta(
     ctx: click.Context,
     url: str,
+    virus: viruses.Virus,
     fasta: List[TextIO],
     query: TextIO,
     output: TextIO,
@@ -42,7 +44,7 @@ def fasta(
     if query:
         query_text = query.read()
     else:
-        query_text = fragments.SEQUENCE_ANALYSIS_DEFAULT
+        query_text = virus.get_default_query('fasta')
     result: List[
         Dict[str, Any]
     ] = client.sequence_analysis(sequences, query_text, 100)

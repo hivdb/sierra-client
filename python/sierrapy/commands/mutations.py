@@ -2,16 +2,17 @@ import json
 import click  # type: ignore
 from typing import List, Dict, TextIO, Any
 
-from .. import fragments
+from .. import viruses
 from ..sierraclient import SierraClient
 
 from .cli import cli
-from .options import url_option
+from .options import url_option, virus_option
 
 
 @cli.command()
 @click.argument('mutations', nargs=-1, required=True)
 @url_option('--url')
+@virus_option('--virus')
 @click.option('-q', '--query', type=click.File('r'),
               help=('A file contains GraphQL fragment definition '
                     'on `MutationsAnalysis`.'))
@@ -22,6 +23,7 @@ from .options import url_option
 def mutations(
     ctx: click.Context,
     url: str,
+    virus: viruses.Virus,
     mutations: List[str],
     query: TextIO,
     output: TextIO,
@@ -43,6 +45,6 @@ def mutations(
     if query:
         query_text = query.read()
     else:
-        query_text = fragments.MUTATIONS_ANALYSIS_DEFAULT
+        query_text = virus.get_default_query('mutations')
     result: Dict[str, Any] = client.mutations_analysis(mutations, query_text)
     json.dump(result, output, indent=None if ugly else 2)

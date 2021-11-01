@@ -1,17 +1,26 @@
 import click  # type: ignore
 
+from .. import viruses
 from ..sierraclient import SierraClient, VERSION
 
 from .options import url_option, virus_option
 
 
-@click.group(invoke_without_command=True)
+@click.group(
+    context_settings={'max_content_width': 120},
+    invoke_without_command=True
+)
 @url_option('--url')
 @virus_option('--virus')
 @click.option('--version', is_flag=True,
               help='Show client and the HIVDB algorithm version.')
 @click.pass_context
-def cli(ctx: click.Context, url: str, virus: str, version: bool) -> None:
+def cli(
+    ctx: click.Context,
+    url: str,
+    virus: viruses.Virus,
+    version: bool
+) -> None:
     """A Client of HIVDB Sierra GraphQL Web Service
 
     Default endpoint URLs:

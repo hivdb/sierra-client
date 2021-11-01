@@ -1,0 +1,46 @@
+name
+bestMatchingSubtype {
+  display
+  referenceAccession
+}
+availableGenes { name }
+validationResults {
+  level
+  message
+}
+mixtureRate
+maxMixtureRate
+minPrevalence
+actualMinPrevalence
+minCodonReads
+minPositionReads
+assembledConsensus
+
+allGeneSequenceReads {
+  firstAA
+  lastAA
+  unsequencedRegions {
+    size
+    regions {
+      posStart
+      posEnd
+    }
+  }
+  gene {
+    name
+    length
+  }
+  mutations {
+    reference
+    position
+    AAs
+    isUnsequenced
+    text
+    allAAReads {
+      aminoAcid
+      numReads
+      percent
+    }
+    totalReads
+  }
+}

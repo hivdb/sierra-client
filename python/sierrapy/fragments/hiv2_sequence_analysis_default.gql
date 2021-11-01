@@ -1,0 +1,61 @@
+inputSequence {
+    header,
+    SHA512
+},
+strain { name },
+subtypeText,
+validationResults {
+    level,
+    message
+},
+alignedGeneSequences {
+    firstAA, lastAA,
+    gene { name, length },
+    mutations {
+        consensus,
+        position,
+        AAs,
+        isInsertion,
+        isDeletion,
+        isApobecMutation,
+        isApobecDRM,
+        isUnusual,
+        isSDRM,
+        hasStop,
+        primaryType,
+        text
+    },
+    SDRMs:mutations(filterOptions:[SDRM]) {
+        text
+    },
+    alignedNAs,
+    alignedAAs,
+    prettyPairwise {
+        positionLine,
+        refAALine,
+        alignedNAsLine,
+        mutationLine
+    }
+},
+drugResistance {
+    version { text, publishDate },
+    gene { name },
+    drugScores {
+        drugClass { name },
+        drug {
+            name,
+            displayAbbr
+        },
+        score,
+        level,
+        partialScores {
+            mutations {
+                text,
+                primaryType,
+                comments { triggeredAAs, type, text }
+            },
+            score
+        },
+        text
+    }
+}

@@ -20,8 +20,9 @@ class SeqReads(TypedDict):
     strain: str
     allReads: List[PosReads]
     minPrevalence: float
-    minCodonCount: int
-    minReadDepth: int
+    maxMixtureRate: float
+    minCodonReads: int
+    minPositionReads: int
 
 
 class Sequence(TypedDict):

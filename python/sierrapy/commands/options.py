@@ -1,12 +1,7 @@
 import click  # type: ignore
 from typing import Any, Callable
 
-
-DEFAULT_URLS = {
-    'HIV1': 'https://hivdb.stanford.edu/graphql',
-    'HIV2': 'https://hivdb.stanford.edu/hiv2/graphql',
-    'SARS2': 'https://covdb.stanford.edu/sierra-sars2/graphql'
-}
+from .. import viruses
 
 
 def url_option_callback(
@@ -15,7 +10,8 @@ def url_option_callback(
     value: str
 ) -> str:
     if value == '__default_url__':
-        value = ctx.obj.get('URL', DEFAULT_URLS[ctx.params['virus']])
+        value = ctx.obj.get(
+            'URL', ctx.params['virus'].default_url)
     ctx.obj['URL'] = value
     return value
 
@@ -32,6 +28,39 @@ def url_option(*args: Any) -> Callable:
     return func
 
 
+def virus_option_callback(
+    ctx: click.Context,
+    param: click.Option,
+    value: str
+) -> viruses.Virus:
+    virus: viruses.Virus = getattr(viruses, value)
+    if 'fasta' in virus.supported_commands:
+        from . import fasta  # noqa
+    elif ctx.command.name == 'fasta':
+        raise click.UsageError(
+            f"Command 'fasta' is not supported by --virus={value}."
+        )
+    if 'mutations' in virus.supported_commands:
+        from . import mutations  # noqa
+    elif ctx.command.name == 'mutations':
+        raise click.UsageError(
+            f"Command 'mutations' is not supported by --virus={value}."
+        )
+    if 'patterns' in virus.supported_commands:
+        from . import patterns  # noqa
+    elif ctx.command.name == 'patterns':
+        raise click.UsageError(
+            f"Command 'patterns' is not supported by --virus={value}."
+        )
+    if 'seqreads' in virus.supported_commands:
+        from . import seqreads  # noqa
+    elif ctx.command.name == 'seqreads':
+        raise click.UsageError(
+            f"Command 'seqreads' is not supported by --virus={value}."
+        )
+    return virus
+
+
 def virus_option(*args: Any) -> Callable:
     func: Callable = click.option(
         *args,
@@ -39,5 +68,6 @@ def virus_option(*args: Any) -> Callable:
         default='HIV1',
         show_default=True,
         is_eager=True,
+        callback=virus_option_callback,
         help='Specify virus to be analyzed.')
     return func

@@ -1,0 +1,18 @@
+name
+validationResults {
+  level
+  message
+}
+allGeneMutations {
+  gene {
+    name
+    length
+  }
+  mutations {
+    reference
+    position
+    AAs
+    isUnsequenced
+    text
+  }
+}

@@ -1,55 +1,24 @@
-# -*- coding: utf-8 -*-
-import re
 import click  # type: ignore
 import csv
 import json
 
 from typing import Tuple, Optional, TextIO, List, Dict
 
-from .. import fragments
+from .. import viruses
 from ..sierraclient import SierraClient
 from ..common_types import PosReads, SeqReads
 
 from .cli import cli
-from .options import url_option
-
-VALID_GENES = ['PR', 'RT', 'IN', 'POL']
-
-
-def normalize_position(
-    gene: str, pos: int
-) -> Tuple[Optional[str], Optional[int]]:
-    if gene == 'POL':
-        pos -= 56
-        if pos < 1:
-            return None, None
-        elif pos < 1 + 99:
-            return 'PR', pos
-        elif pos < 1 + 99 + 560:
-            return 'RT', pos - 99
-        else:
-            return 'IN', pos - 99 - 560
-    else:
-        return gene, pos
-
-
-def normalize_gene(gene: str) -> Optional[str]:
-    if re.match(r'^\s*(PR|protease)\s*$', gene, re.I):
-        return 'PR'
-    elif re.match(r'^\s*(RT|reverse transcriptase)\s*$', gene, re.I):
-        return 'RT'
-    elif re.match(r'^\s*(IN|INT|integrase)\s*$', gene, re.I):
-        return 'IN'
-    elif re.match(r'^\s*(pol)\s*$', gene, re.I):
-        return 'POL'
-    return None
+from .options import url_option, virus_option
 
 
 def parse_seqreads(
-        fp: TextIO,
-        min_prevalence: float = 0.,
-        min_codon_count: int = 0,
-        min_read_depth: int = -1
+    fp: TextIO,
+    virus: viruses.Virus,
+    min_prevalence: float,
+    max_mixture_rate: float,
+    min_codon_reads: int,
+    min_position_reads: int
 ) -> SeqReads:
     aapos_text: str
     total_reads_text: str
@@ -60,12 +29,18 @@ def parse_seqreads(
     total_reads: int
     codon_reads: int
     gpkey: Tuple[str, int]
-    firstrow = fp.readline()
-    delimiter = ','
-    if '\t' in firstrow:
-        delimiter = '\t'
+    while True:
+        firstrow = fp.readline()
+        if firstrow.startswith('#'):
+            continue
+        delimiter = ','
+        if '\t' in firstrow:
+            delimiter = '\t'
+        break
     fp.seek(0)
     for row in csv.reader(fp, delimiter=delimiter):
+        if row[0].startswith('#'):
+            continue
         num_cols = len(row)
         if num_cols >= 5:
             (gene,
@@ -76,11 +51,10 @@ def parse_seqreads(
         else:
             continue
         codon = codon.upper()
-        gene = normalize_gene(gene)
+        gene = virus.synonym_to_gene_name(gene)
         # skip header and problem rows
         if (
             not gene or
-            gene not in VALID_GENES or
             not aapos_text.isdigit() or
             not total_reads_text.isdigit() or
             len(codon) < 3 or
@@ -91,7 +65,7 @@ def parse_seqreads(
             aapos = int(aapos_text)
         except (TypeError, ValueError):
             continue
-        gene, aapos = normalize_position(gene, aapos)
+        gene, aapos = virus.source_gene_to_target_gene_position(gene, aapos)
         if gene is None or aapos is None:
             continue
         total_reads = int(total_reads_text)
@@ -108,42 +82,54 @@ def parse_seqreads(
             {'codon': codon, 'reads': codon_reads})
     return {
         'name': fp.name,
-        'strain': 'HIV1',
+        'strain': virus.strain_name,
         'allReads': sorted(
             gpmap.values(),
-            key=lambda pcr: (VALID_GENES.index(pcr['gene']), pcr['position'])),
+            key=lambda pcr: (virus.gene_index(pcr['gene']), pcr['position'])
+        ),
         'minPrevalence': min_prevalence,
-        'minCodonCount': min_codon_count,
-        'minReadDepth': min_read_depth
+        'maxMixtureRate': max_mixture_rate,
+        'minCodonReads': min_codon_reads,
+        'minPositionReads': min_position_reads
     }
 
 
 @cli.command()
 @click.argument('seqreads', nargs=-1, type=click.File('r'), required=True)
 @url_option('--url')
-@click.option('-p', '--pcnt-cutoff', type=float, default=0, show_default=True,
-              help=('Minimal prevalence cutoff applied on the sequence reads '
+@virus_option('--virus')
+@click.option('-p', '--pcnt-cutoff',
+              type=float, default=0.1, show_default=True,
+              help=('Minimal prevalence cutoff for this sequence reads '
                     '(range: 0-1.0)'))
-@click.option('-c', '--num-cutoff', type=int, default=0, show_default=True,
-              help='Minimal read count cutoff applied on the sequence reads.')
-@click.option('-d', '--min-read-depth', type=int, default=-1,
+@click.option('-m', '--mixture-cutoff',
+              type=float, default=0.0005, show_default=True,
+              help=('Maximum mixture rate for this sequence reads '
+                    '(range: 0-1.0)'))
+@click.option('-d', '--min-codon-reads', type=int, default=10,
+              show_default=True,
+              help=('Minimal read depth applied to '
+                    'each codon of this sequence'))
+@click.option('-D', '--min-position-reads', type=int, default=1,
               show_default=True,
               help=('Minimal read depth applied to '
                     'each position of this sequence'))
 @click.option('-q', '--query', type=click.File('r'), show_default=True,
               help=('A file contains GraphQL fragment definition '
-                    'on `SequenceAnalysis`.'))
+                    'on `SequenceAnalysis`'))
 @click.option('-o', '--output', default='-', type=click.File('w'),
-              show_default=True, help='File path to store the JSON result.')
-@click.option('--ugly', is_flag=True, help='Output compressed JSON result.')
+              show_default=True, help='File path to store the JSON result')
+@click.option('--ugly', is_flag=True, help='Output compressed JSON result')
 @click.pass_context
 def seqreads(
     ctx: click.Context,
     url: str,
+    virus: viruses.Virus,
     seqreads: List[TextIO],
     pcnt_cutoff: float,
-    num_cutoff: int,
-    min_read_depth: int,
+    mixture_cutoff: float,
+    min_codon_reads: int,
+    min_position_reads: int,
     query: TextIO,
     output: TextIO,
     ugly: bool
@@ -157,11 +143,16 @@ def seqreads(
 
     query_text: str
     seqreads_payload: List[SeqReads] = [parse_seqreads(
-        fp, pcnt_cutoff, num_cutoff, min_read_depth
+        fp,
+        virus,
+        pcnt_cutoff,
+        mixture_cutoff,
+        min_codon_reads,
+        min_position_reads
     ) for fp in seqreads]
     if query:
         query_text = query.read()
     else:
-        query_text = fragments.SEQUENCE_READS_ANALYSIS_DEFAULT
+        query_text = virus.get_default_query('seqreads')
     result = client.sequence_reads_analysis(seqreads_payload, query_text, 2)
     json.dump(result, output, indent=None if ugly else 2)

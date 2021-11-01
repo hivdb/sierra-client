@@ -1,14 +1,16 @@
-# -*- coding: utf-8 -*-
-
 import os
 
-MUTATIONS_ANALYSIS_DEFAULT: str
-SEQUENCE_ANALYSIS_DEFAULT: str
-SEQUENCE_READS_ANALYSIS_DEFAULT: str
+HIV1_MUTATIONS_ANALYSIS_DEFAULT: str
+HIV1_SEQUENCE_ANALYSIS_DEFAULT: str
+HIV1_SEQUENCE_READS_ANALYSIS_DEFAULT: str
+HIV2_SEQUENCE_ANALYSIS_DEFAULT: str
+SARS2_MUTATIONS_ANALYSIS_DEFAULT: str
+SARS2_SEQUENCE_ANALYSIS_DEFAULT: str
+SARS2_SEQUENCE_READS_ANALYSIS_DEFAULT: str
 
-_globals = globals()
 __all__ = []
 
+_globals = globals()
 dirpath = os.path.dirname(__file__)
 
 for name in _globals['__annotations__']:
