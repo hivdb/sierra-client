@@ -11,7 +11,7 @@ __all__ = []
 
 dirpath = os.path.dirname(__file__)
 
-for name in _globals.__annotations__:
+for name in _globals['__annotations__']:
     path = name.lower()
     with open(
         os.path.join(dirpath, os.path.extsep.join([path, 'gql']))
