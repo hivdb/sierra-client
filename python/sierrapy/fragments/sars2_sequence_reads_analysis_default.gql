@@ -16,6 +16,13 @@ minCodonReads
 minPositionReads
 assembledConsensus
 
+cutoffKeyPoints {
+  mixtureRate
+  minPrevalence
+  isAboveMixtureRateThreshold
+  isBelowMinPrevalenceThreshold
+}
+
 allGeneSequenceReads {
   firstAA
   lastAA

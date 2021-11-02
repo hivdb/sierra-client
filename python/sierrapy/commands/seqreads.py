@@ -1,15 +1,51 @@
 import click  # type: ignore
 import csv
+import re
 import json
 
 from typing import Tuple, Optional, TextIO, List, Dict
 
 from .. import viruses
 from ..sierraclient import SierraClient
-from ..common_types import PosReads, SeqReads
+from ..common_types import PosReads, SeqReads, UntransRegion
 
 from .cli import cli
 from .options import url_option, virus_option
+
+UTR_BEGIN: re.Pattern = re.compile(
+    r'^# *--- *untranslated regions begin *---'
+)
+UTR_END: re.Pattern = re.compile(
+    r'^# *--- *untranslated regions end *---'
+)
+UTR_PATTERN: re.Pattern = re.compile(
+    r'# *(?P<name>[\S]+) (?P<refStart>\d+)'
+    r'\.\.(?P<refEnd>\d+): *(?P<consensus>[\S]+)'
+)
+
+
+def parse_untrans_regions(fp: TextIO) -> List[UntransRegion]:
+    row: str
+    groupdict: Dict[str, str]
+    begin: bool = False
+    results: List[UntransRegion] = []
+    for row in fp:
+        if UTR_END.search(row):
+            begin = False
+        elif begin:
+            match: Optional[re.Match] = UTR_PATTERN.search(row)
+            if match:
+                groupdict = match.groupdict()
+
+                results.append({
+                    'name': groupdict['name'],
+                    'refStart': int(groupdict['refStart']),
+                    'refEnd': int(groupdict['refEnd']),
+                    'consensus': groupdict['consensus']
+                })
+        elif UTR_BEGIN.search(row):
+            begin = True
+    return results
 
 
 def parse_seqreads(
@@ -25,10 +61,13 @@ def parse_seqreads(
     codon_reads_text: str
     gene: Optional[str]
     aapos: Optional[int]
-    gpmap: Dict[Tuple[str, int], PosReads] = {}
     total_reads: int
     codon_reads: int
+    codon: str
     gpkey: Tuple[str, int]
+
+    untrans_regions: List[UntransRegion] = parse_untrans_regions(fp)
+    fp.seek(0)
     while True:
         firstrow = fp.readline()
         if firstrow.startswith('#'):
@@ -38,6 +77,8 @@ def parse_seqreads(
             delimiter = '\t'
         break
     fp.seek(0)
+
+    gpmap: Dict[Tuple[str, int], PosReads] = {}
     for row in csv.reader(fp, delimiter=delimiter):
         if row[0].startswith('#'):
             continue
@@ -51,6 +92,10 @@ def parse_seqreads(
         else:
             continue
         codon = codon.upper()
+        try:
+            aapos = int(aapos_text)
+        except (TypeError, ValueError):
+            continue
         gene = virus.synonym_to_gene_name(gene)
         # skip header and problem rows
         if (
@@ -61,22 +106,32 @@ def parse_seqreads(
             not codon_reads_text.isdigit()
         ):
             continue
-        try:
-            aapos = int(aapos_text)
-        except (TypeError, ValueError):
-            continue
         gene, aapos = virus.source_gene_to_target_gene_position(gene, aapos)
         if gene is None or aapos is None:
             continue
-        total_reads = int(total_reads_text)
-        codon_reads = int(codon_reads_text)
+        try:
+            total_reads = int(total_reads_text)
+        except (TypeError, ValueError):
+            continue
+        if total_reads == 0:
+            continue
+        try:
+            codon_reads = int(codon_reads_text)
+        except (TypeError, ValueError):
+            continue
+        if codon_reads == 0:
+            continue
+        if codon.count('-') < 3:
+            codon = codon.replace('-', '')
+        if len(codon) < 3:
+            continue
         gpkey = (gene, aapos)
         if gpkey not in gpmap:
             gpmap[gpkey] = {
+                'allCodonReads': [],
                 'gene': gene,
                 'position': aapos,
-                'totalReads': total_reads,
-                'allCodonReads': []
+                'totalReads': total_reads
             }
         gpmap[gpkey]['allCodonReads'].append(
             {'codon': codon, 'reads': codon_reads})
@@ -87,6 +142,7 @@ def parse_seqreads(
             gpmap.values(),
             key=lambda pcr: (virus.gene_index(pcr['gene']), pcr['position'])
         ),
+        'untranslatedRegions': untrans_regions,
         'minPrevalence': min_prevalence,
         'maxMixtureRate': max_mixture_rate,
         'minCodonReads': min_codon_reads,

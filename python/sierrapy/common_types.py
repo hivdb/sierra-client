@@ -15,10 +15,18 @@ class PosReads(TypedDict):
     allCodonReads: List[CodonReads]
 
 
+class UntransRegion(TypedDict):
+    name: str
+    refStart: int
+    refEnd: int
+    consensus: str
+
+
 class SeqReads(TypedDict):
     name: str
     strain: str
     allReads: List[PosReads]
+    untranslatedRegions: List[UntransRegion]
     minPrevalence: float
     maxMixtureRate: float
     minCodonReads: int
