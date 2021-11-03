@@ -16,6 +16,12 @@ minCodonReads
 minPositionReads
 assembledConsensus
 
+readDepthStats {
+  median: percentile(p: 50)
+  p25: percentile(p: 25)
+  p75: percentile(p: 75)
+}
+
 cutoffKeyPoints {
   mixtureRate
   minPrevalence
