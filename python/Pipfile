@@ -15,6 +15,7 @@ six = "*"
 tqdm = "*"
 click = "*"
 voluptuous = "*"
+more-itertools = "*"
 
 [requires]
 python_version = "3.9"

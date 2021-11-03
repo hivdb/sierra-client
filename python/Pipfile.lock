@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "024b4bad5c716c8bf043e6011c1355e1794aa40b4aa063011be264d7c57a04b3"
+            "sha256": "457b8b010934067f773fb1c318b18e0abc3a79b13e42eb53ee85e163f667ffad"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -62,6 +62,14 @@
             ],
             "markers": "python_version >= '3'",
             "version": "==3.3"
+        },
+        "more-itertools": {
+            "hashes": [
+                "sha256:1debcabeb1df793814859d64a81ad7cb10504c24349368ccf214c664c474f41f",
+                "sha256:56ddac45541718ba332db05f464bebfb0768110111affd27f66e0051f276fa43"
+            ],
+            "index": "pypi",
+            "version": "==8.10.0"
         },
         "promise": {
             "hashes": [
@@ -125,12 +133,13 @@
             ],
             "version": "==2021.10.8"
         },
-        "chardet": {
+        "charset-normalizer": {
             "hashes": [
-                "sha256:84ab92ed1c4d4f16916e05906b6b75a6c0fb5db821cc65e70cbd64a3e2a5eaae",
-                "sha256:fc323ffcaeaed0e0a02bf4d117757b98aed530d9ed4531e3e15460124c106691"
+                "sha256:e019de665e2bcf9c2b64e2e5aa025fa991da8720daa3c1138cadd2fd1856aed0",
+                "sha256:f7af805c321bfa1ce6714c51f254e0d5bb5e5834039bc17db7ebe3a4cec9492b"
             ],
-            "version": "==3.0.4"
+            "markers": "python_version >= '3'",
+            "version": "==2.0.7"
         },
         "click": {
             "hashes": [

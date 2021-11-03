@@ -2,15 +2,27 @@ import click  # type: ignore
 import csv
 import re
 import json
+import gzip
 
-from typing import Tuple, Optional, TextIO, List, Dict
+from io import StringIO
+from typing import (
+    Tuple,
+    Optional,
+    TextIO,
+    BinaryIO,
+    List,
+    Dict,
+    Iterable
+)
+from tqdm import tqdm  # type: ignore
+from more_itertools import chunked  # type: ignore
 
 from .. import viruses
 from ..sierraclient import SierraClient
 from ..common_types import PosReads, SeqReads, UntransRegion
 
 from .cli import cli
-from .options import url_option, virus_option
+from .options import url_option, virus_option, file_or_dir_argument
 
 UTR_BEGIN: re.Pattern = re.compile(
     r'^# *--- *untranslated regions begin *---'
@@ -22,6 +34,7 @@ UTR_PATTERN: re.Pattern = re.compile(
     r'# *(?P<name>[\S]+) (?P<refStart>\d+)'
     r'\.\.(?P<refEnd>\d+): *(?P<consensus>[\S]+)'
 )
+CODFREQ_EXT_PATTERN = re.compile(r'\.codfreq(?:\.gz)?$', re.I)
 
 
 def parse_untrans_regions(fp: TextIO) -> List[UntransRegion]:
@@ -49,13 +62,15 @@ def parse_untrans_regions(fp: TextIO) -> List[UntransRegion]:
 
 
 def parse_seqreads(
-    fp: TextIO,
+    filename: str,
     virus: viruses.Virus,
     min_prevalence: float,
     max_mixture_rate: float,
     min_codon_reads: int,
     min_position_reads: int
 ) -> SeqReads:
+    bin_fp: BinaryIO
+    fp: TextIO
     aapos_text: str
     total_reads_text: str
     codon_reads_text: str
@@ -65,6 +80,16 @@ def parse_seqreads(
     codon_reads: int
     codon: str
     gpkey: Tuple[str, int]
+
+    with open(filename, 'rb') as bin_fp:
+        gzip_decl: bytes = bin_fp.read(2)
+        bin_fp.seek(0)
+        if gzip_decl == b'\x1f\x8b':
+            fp = StringIO(
+                gzip.decompress(bin_fp.read()).decode('UTF-8-sig')
+            )
+        else:
+            fp = StringIO(bin_fp.read().decode('UTF-8-sig'))
 
     untrans_regions: List[UntransRegion] = parse_untrans_regions(fp)
     fp.seek(0)
@@ -136,7 +161,7 @@ def parse_seqreads(
         gpmap[gpkey]['allCodonReads'].append(
             {'codon': codon, 'reads': codon_reads})
     return {
-        'name': fp.name,
+        'name': bin_fp.name,
         'strain': virus.strain_name,
         'allReads': sorted(
             gpmap.values(),
@@ -151,9 +176,12 @@ def parse_seqreads(
 
 
 @cli.command()
-@click.argument('seqreads', nargs=-1, type=click.File('r'), required=True)
 @url_option('--url')
 @virus_option('--virus')
+@file_or_dir_argument(
+    'seqreads',
+    pattern=CODFREQ_EXT_PATTERN
+)
 @click.option('-p', '--pcnt-cutoff',
               type=float, default=0.1, show_default=True,
               help=('Minimal prevalence cutoff for this sequence reads '
@@ -173,42 +201,49 @@ def parse_seqreads(
 @click.option('-q', '--query', type=click.File('r'), show_default=True,
               help=('A file contains GraphQL fragment definition '
                     'on `SequenceAnalysis`'))
-@click.option('-o', '--output', default='-', type=click.File('w'),
-              show_default=True, help='File path to store the JSON result')
 @click.option('--ugly', is_flag=True, help='Output compressed JSON result')
 @click.pass_context
 def seqreads(
     ctx: click.Context,
     url: str,
     virus: viruses.Virus,
-    seqreads: List[TextIO],
+    seqreads: List[str],
     pcnt_cutoff: float,
     mixture_cutoff: float,
     min_codon_reads: int,
     min_position_reads: int,
     query: TextIO,
-    output: TextIO,
     ugly: bool
 ) -> None:
     """
     Run alignment, drug resistance and other analysis for one or more
     tab-delimited text files contained codon reads of HIV-1 pol DNA sequences.
     """
-    client: SierraClient = SierraClient(url)
-    client.toggle_progress(True)
-
+    idx: int
+    fns: Iterable[str]
+    fn: str
+    partial_result: str
     query_text: str
-    seqreads_payload: List[SeqReads] = [parse_seqreads(
-        fp,
-        virus,
-        pcnt_cutoff,
-        mixture_cutoff,
-        min_codon_reads,
-        min_position_reads
-    ) for fp in seqreads]
+    output: TextIO
+    client: SierraClient = SierraClient(url)
     if query:
         query_text = query.read()
     else:
         query_text = virus.get_default_query('seqreads')
-    result = client.sequence_reads_analysis(seqreads_payload, query_text, 2)
-    json.dump(result, output, indent=None if ugly else 2)
+
+    seqreads = tqdm(seqreads)
+    for fns in chunked(seqreads, 2):
+        payload: List[SeqReads] = [parse_seqreads(
+            fn,
+            virus,
+            pcnt_cutoff,
+            mixture_cutoff,
+            min_codon_reads,
+            min_position_reads
+        ) for fn in fns]
+        for [fn, report] in zip(
+            fns, client._sequence_reads_analysis(payload, query_text)
+        ):
+            output_filename: str = CODFREQ_EXT_PATTERN.sub('.report.json', fn)
+            with open(output_filename, 'w') as output:
+                json.dump(report, output, indent=None if ugly else 2)
