@@ -1,4 +1,13 @@
 name
+pangolin(syncFetch: true) {
+  runHash
+  reportTimestamp
+  version
+  lineage
+  probability
+  status
+  note
+}
 bestMatchingSubtype {
   display
   referenceAccession
