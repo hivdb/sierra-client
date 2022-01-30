@@ -14,10 +14,10 @@ from typing import (
 from more_itertools import chunked
 
 from tqdm import tqdm  # type: ignore
-from gql import gql, Client  # type: ignore
-from gql.transport.requests import RequestsHTTPTransport  # type: ignore
-from requests.exceptions import HTTPError  # type: ignore
-from graphql.language.ast import Document as gqlDocument  # type: ignore
+from gql import gql, Client
+from gql.transport.requests import RequestsHTTPTransport
+from requests.exceptions import HTTPError
+from graphql.language.ast import DocumentNode as gqlDocument
 
 from .common_types import Sequence, SeqReads, ServerVer
 
