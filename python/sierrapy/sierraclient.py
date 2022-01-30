@@ -172,15 +172,11 @@ class SierraClient:
         self,
         sequences: Union[List[Sequence], Iterator[Sequence]],
         query: str,
-        step: int = 20,
-        total: int = -1
+        step: int = 20
     ) -> Generator[Dict[str, Any], None, None]:
-        pbar: Optional[tqdm]
+        pbar: Optional[tqdm] = None
         if self._progress:
-            if total == -1:
-                sequences = list(sequences)
-                total = len(sequences)
-            pbar = tqdm(total=total)
+            pbar = tqdm()
         for partial in chunked(sequences, step):
             yield from self._sequence_analysis(partial, query)
             pbar and pbar.update(len(partial))
