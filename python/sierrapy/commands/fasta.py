@@ -3,7 +3,7 @@ import re
 import json
 import click  # type: ignore
 from itertools import chain
-from typing import List, Dict, TextIO, Any, Iterator
+from typing import Dict, TextIO, Any, Tuple, Iterator
 from more_itertools import chunked
 
 from .. import fastareader, viruses
@@ -14,6 +14,19 @@ from .cli import cli
 from .options import url_option, virus_option
 
 FASTA_PATTERN = re.compile(r'\.fa(?:s(?:ta)?)?$', re.I)
+
+
+def iter_fasta_files(
+    file_or_dir: Tuple[str, ...]
+) -> Iterator[TextIO]:
+    for one in file_or_dir:
+        if os.path.isfile(one):
+            yield open(one)
+        else:
+            for fn in os.listdir(one):
+                if not FASTA_PATTERN.search(fn):
+                    continue
+                yield open(os.path.join(one, fn))
 
 
 @cli.command()
@@ -34,17 +47,23 @@ FASTA_PATTERN = re.compile(r'\.fa(?:s(?:ta)?)?$', re.I)
               help='Save JSON result files per n sequences.')
 @click.option('--step', type=int, default=40,
               help='Send batch requests per n sequences.')
+@click.option('--total', type=int, default=0,
+              help=(
+                  'Total number of sequences; '
+                  'specify one to visualize a progress bar.'
+              ))
 @click.option('--ugly', is_flag=True, help='Output compressed JSON result.')
 @click.pass_context
 def fasta(
     ctx: click.Context,
     url: str,
     virus: viruses.Virus,
-    fasta: str,
+    fasta: Tuple[str, ...],
     query: TextIO,
     output: str,
     sharding: int,
     step: int,
+    total: int,
     ugly: bool
 ) -> None:
     """
@@ -52,26 +71,15 @@ def fasta(
     FASTA-format files contained DNA sequences.
     """
     ext: str
-    fasta_fn: str
     query_text: str
     client: SierraClient = SierraClient(url)
     client.toggle_progress(True)
 
-    total: int = 0
-    fasta_fps: List[TextIO] = []
-    if os.path.isfile(fasta):
-        fasta_fps.append(open(fasta))
-    for fasta_fn in os.listdir(fasta):
-        if FASTA_PATTERN.search(fasta_fn):
-            fp = open(os.path.join(fasta, fasta_fn))
-            fasta_fps.append(fp)
-            for line in fp:
-                if line[0] == '>':
-                    total += 1
-            fp.seek(0)
-    sequences: Iterator[Sequence] = chain(*[
+    fasta_fps: Iterator[TextIO] = iter_fasta_files(fasta)
+
+    sequences: Iterator[Sequence] = chain(*(
         fastareader.load(fp) for fp in fasta_fps
-    ])
+    ))
 
     if query:
         query_text = query.read()
@@ -84,5 +92,5 @@ def fasta(
     if not ext:
         ext = 'json'
     for idx, partial in enumerate(chunked(result, sharding)):
-        with open('{}.{}.{}'.format(output, idx, ext), 'w') as fp:
+        with open('{}.{}{}'.format(output, idx, ext), 'w') as fp:
             json.dump(partial, fp, indent=None if ugly else 2)
