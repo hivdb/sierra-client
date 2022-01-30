@@ -1,7 +1,17 @@
 # -*- coding: utf-8 -*-
 
 import json
-from typing import Optional, Dict, Any, Union, List, Generator, Tuple
+from typing import (
+    Optional,
+    Dict,
+    Any,
+    Union,
+    List,
+    Generator,
+    Tuple,
+    Iterator
+)
+from more_itertools import chunked
 
 from tqdm import tqdm  # type: ignore
 from gql import gql, Client  # type: ignore
@@ -160,17 +170,20 @@ class SierraClient:
 
     def iter_sequence_analysis(
         self,
-        sequences: List[Sequence],
+        sequences: Union[List[Sequence], Iterator[Sequence]],
         query: str,
-        step: int = 20
+        step: int = 20,
+        total: int = -1
     ) -> Generator[Dict[str, Any], None, None]:
         pbar: Optional[tqdm]
         if self._progress:
-            pbar = tqdm(total=len(sequences))
-        while sequences:
-            yield from self._sequence_analysis(sequences[:step], query)
-            sequences = sequences[step:]
-            pbar and pbar.update(step)
+            if total == -1:
+                sequences = list(sequences)
+                total = len(sequences)
+            pbar = tqdm(total=total)
+        for partial in chunked(sequences, step):
+            yield from self._sequence_analysis(partial, query)
+            pbar and pbar.update(len(partial))
 
     def iter_pattern_analysis(
         self,

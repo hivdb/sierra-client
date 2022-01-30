@@ -2,27 +2,11 @@
 # -*- coding: UTF-8 -*-
 
 import os
-import re
-import sys
-import ast
 import setuptools  # type: ignore
 
-from typing import Optional, List
+from typing import List
 
-
-_version_re: re.Pattern = re.compile(r'VERSION\s+=\s+(.*)')
-
-with open('sierrapy/sierraclient.py', 'rb') as f:
-    ver_match: Optional[re.Match] = _version_re.search(
-        f.read().decode('utf-8')
-    )
-    if not ver_match:
-        print(
-            'Unable to find version from sierrapy/sierraclient.py',
-            file=sys.stderr
-        )
-        exit(1)
-    version: str = str(ast.literal_eval(ver_match.group(1)))
+VERSION = '0.4.0'
 
 
 def strip_comments(line: str) -> str:
@@ -42,7 +26,7 @@ def req(filename: str) -> List[str]:
 
 setup_params = dict(
     name="sierrapy",
-    version=version,
+    version=VERSION,
     url="https://github.com/hivdb/sierra-client/tree/master/python",
     author='Philip Tzou',
     author_email="philiptz@stanford.edu",

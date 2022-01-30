@@ -1,18 +1,17 @@
-from typing import TextIO, List, Optional
+from typing import TextIO, Generator, Optional
 from .common_types import Sequence
 
 
-def load(fp: TextIO) -> List[Sequence]:
-    sequences: List[Sequence] = []
+def load(fp: TextIO) -> Generator[Sequence, None, None]:
     header: Optional[str] = None
     curseq: bytearray = bytearray()
     for line in fp:
         if line.startswith('>'):
             if header and curseq:
-                sequences.append({
+                yield {
                     'header': header,
                     'sequence': curseq.upper().decode('U8')
-                })
+                }
             header = line[1:].strip()
             curseq = bytearray()
         elif line.startswith('#'):
@@ -23,8 +22,7 @@ def load(fp: TextIO) -> List[Sequence]:
                 .encode('ASCII', errors='ignore')
             )
     if header and curseq:
-        sequences.append({
+        yield {
             'header': header,
             'sequence': curseq.upper().decode('U8')
-        })
-    return sequences
+        }

@@ -1,7 +1,10 @@
-import click  # type: ignore
+import os
+import re
 import json
+import click  # type: ignore
 from itertools import chain
-from typing import List, Dict, TextIO, Any
+from typing import List, Dict, TextIO, Any, Iterator
+from more_itertools import chunked
 
 from .. import fastareader, viruses
 from ..sierraclient import SierraClient
@@ -10,42 +13,76 @@ from ..common_types import Sequence
 from .cli import cli
 from .options import url_option, virus_option
 
+FASTA_PATTERN = re.compile(r'\.fa(?:s(?:ta)?)?$', re.I)
+
 
 @cli.command()
-@click.argument('fasta', nargs=-1, type=click.File('r'), required=True)
+@click.argument(
+    'fasta',
+    nargs=-1,
+    type=click.Path(exists=True),
+    required=True)
 @url_option('--url')
 @virus_option('--virus')
 @click.option('-q', '--query', type=click.File('r'),
               help=('A file contains GraphQL fragment definition '
                     'on `SequenceAnalysis`.'))
-@click.option('-o', '--output', default='-', type=click.File('w'),
+@click.option('-o', '--output', default='-',
+              type=click.Path(dir_okay=False),
               help='File path to store the JSON result.')
+@click.option('--sharding', type=int, default=100,
+              help='Save JSON result files per n sequences.')
+@click.option('--step', type=int, default=40,
+              help='Send batch requests per n sequences.')
 @click.option('--ugly', is_flag=True, help='Output compressed JSON result.')
 @click.pass_context
 def fasta(
     ctx: click.Context,
     url: str,
     virus: viruses.Virus,
-    fasta: List[TextIO],
+    fasta: str,
     query: TextIO,
-    output: TextIO,
+    output: str,
+    sharding: int,
+    step: int,
     ugly: bool
 ) -> None:
     """
     Run alignment, drug resistance and other analysis for one or more
-    FASTA-format files contained HIV-1 pol DNA sequences.
+    FASTA-format files contained DNA sequences.
     """
+    ext: str
+    fasta_fn: str
     query_text: str
     client: SierraClient = SierraClient(url)
     client.toggle_progress(True)
-    sequences: List[Sequence] = list(
-        chain(*[fastareader.load(fp) for fp in fasta])
-    )
+
+    total: int = 0
+    fasta_fps: List[TextIO] = []
+    if os.path.isfile(fasta):
+        fasta_fps.append(open(fasta))
+    for fasta_fn in os.listdir(fasta):
+        if FASTA_PATTERN.search(fasta_fn):
+            fp = open(os.path.join(fasta, fasta_fn))
+            fasta_fps.append(fp)
+            for line in fp:
+                if line[0] == '>':
+                    total += 1
+            fp.seek(0)
+    sequences: Iterator[Sequence] = chain(*[
+        fastareader.load(fp) for fp in fasta_fps
+    ])
+
     if query:
         query_text = query.read()
     else:
         query_text = virus.get_default_query('fasta')
-    result: List[
+    result: Iterator[
         Dict[str, Any]
-    ] = client.sequence_analysis(sequences, query_text, 100)
-    json.dump(result, output, indent=None if ugly else 2)
+    ] = client.iter_sequence_analysis(sequences, query_text, step, total)
+    output, ext = os.path.splitext(output)
+    if not ext:
+        ext = 'json'
+    for idx, partial in enumerate(chunked(result, sharding)):
+        with open('{}.{}.{}'.format(output, idx, ext), 'w') as fp:
+            json.dump(partial, fp, indent=None if ugly else 2)
