@@ -86,6 +86,8 @@ def fasta(
         fastareader.load(fp) for fp in fasta_fps
     ))
     idx_offset: int = math.ceil(skip / sharding)
+    for _ in zip(range(skip), sequences):
+        pass
 
     if query:
         query_text = query.read()
