@@ -7,6 +7,7 @@ from typing import (
     Any,
     Union,
     List,
+    Sequence as ListOrTuple,
     Generator,
     Tuple,
     Iterator
@@ -16,7 +17,7 @@ from more_itertools import chunked
 from tqdm import tqdm  # type: ignore
 from gql import gql, Client
 from gql.transport.requests import RequestsHTTPTransport
-from requests.exceptions import HTTPError
+from requests.exceptions import HTTPError  # type: ignore
 from graphql.language.ast import DocumentNode as gqlDocument
 
 from .common_types import Sequence, SeqReads, ServerVer
@@ -106,8 +107,8 @@ class SierraClient:
 
     def _pattern_analysis(
         self,
-        patterns: List[List[str]],
-        pattern_names: List[Optional[str]],
+        patterns: ListOrTuple[List[str]],
+        pattern_names: ListOrTuple[Optional[str]],
         query: str,
         **kw: Any
     ) -> List[Dict[str, Any]]:
@@ -183,23 +184,21 @@ class SierraClient:
 
     def iter_pattern_analysis(
         self,
-        patterns: List[List[str]],
-        pattern_names: List[Optional[str]],
+        patterns: Iterator[Tuple[str, List[str]]],
         query: str,
         step: int = 20,
         **kw: Any
     ) -> Generator[Dict[str, Any], None, None]:
-        assert len(patterns) == len(pattern_names)
-        pbar: Optional[tqdm]
-        result: Dict[str, Any]
+        pbar: Optional[tqdm] = None
+        pats: Tuple[List[str], ...]
+        pat_names: Tuple[str, ...]
         if self._progress:
-            pbar = tqdm(total=len(patterns))
-        while patterns:
+            pbar = tqdm()
+        for partial in chunked(patterns, step):
+            pat_names, pats = tuple(zip(*partial))
             yield from self._pattern_analysis(
-                patterns[:step], pattern_names[:step], query, **kw
+                pats, pat_names, query, **kw
             )
-            patterns = patterns[step:]
-            pattern_names = pattern_names[step:]
             pbar and pbar.update(step)
 
     def iter_sequence_reads_analysis(
@@ -228,14 +227,13 @@ class SierraClient:
 
     def pattern_analysis(
         self,
-        patterns: List[List[str]],
-        pattern_names: List[Optional[str]],
+        patterns: Iterator[Tuple[str, List[str]]],
         query: str,
         step: int = 20,
         **kw: Any
     ) -> List[Dict[str, Any]]:
         return list(self.iter_pattern_analysis(
-            patterns, pattern_names, query, step, **kw
+            patterns, query, step, **kw
         ))
 
     def sequence_reads_analysis(

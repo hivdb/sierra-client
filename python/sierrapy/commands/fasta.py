@@ -2,7 +2,7 @@ import os
 import re
 import json
 import math
-import tqdm
+import tqdm  # type: ignore
 import click  # type: ignore
 from itertools import chain
 from typing import Dict, TextIO, Any, Tuple, Iterator
@@ -93,6 +93,7 @@ def fasta(
         query_text = query.read()
     else:
         query_text = virus.get_default_query('fasta')
+
     result: Iterator[
         Dict[str, Any]
     ] = tqdm.tqdm(
