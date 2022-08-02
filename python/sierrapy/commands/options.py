@@ -75,6 +75,7 @@ def virus_option(*args: Any) -> Callable:
     func: Callable = click.option(
         *args,
         type=click.Choice(['HIV1', 'HIV2', 'SARS2']),
+        default='HIV1', show_default=True,
         is_eager=True,
         callback=virus_option_callback,
         help='Specify virus to be analyzed.')

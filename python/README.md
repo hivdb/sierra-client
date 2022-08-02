@@ -32,9 +32,33 @@ Once installed, a command `sierrapy` is available from the command line. The
 command currently support three main methods to fetch JSON-format
 drug-resistance report from backend service.
 
+### Select a virus
+
+By default, SierraPy send queries to our HIV-1 analysis server. This behavior
+can be changed by specify `--virus` after the sierrapy command:
+
+```shell
+# For HIV-2 analysis
+sierrapy --virus HIV2 ...
+
+For SARS-CoV-2 analysis
+sierrapy --virus SARS2 ...
+```
+
+### Specify GraphQL entry-point
+
+By default, SierraPy send queries to Sierra production servers maintained by
+HIVDB team. If users wish to host their own [Sierra
+server](https://github.com/hivdb/sierra), they must specify the entry-point of
+Sierra GraphQL. For example:
+
+```shell
+sierrapy --url http://localhost:8080/WebApplications/rest/graphql ...
+```
+
 ### Input Sequences (FASTA File)
 
-This method is corresponding to the [HIVDB "Input Sequences"][hivdb-seqinput]
+This method is corresponding to the [HIVDB "Input sequences"][hivdb-seqinput]
 tab. It can accept any large number of files and sequences as long as you
 don't blow up your computer. The input FASTA files should contain at least one
 HIV/SIV pol DNA sequence.
@@ -68,9 +92,29 @@ For further infomations on how to write queries in GraphQL, please visit
 [graphql.org/learn][graphql-learn]. For API reference and a playground of HIVDB
 GraphQL service, please visit [hivdb.stanford.edu/page/graphiql][graphiql].
 
+### Input Sequence Reads (CodFreq File)
+
+This method is corresponding to the [HIVDB "Input sequence
+reads"][hivdb-seqreadsinput] tab. It can accept a list of CodFreq files or
+directories that containing CodFreq files. JSON format reports will be
+generated for each CodFreq files when the analysis completed.
+
+```shell
+sierrapy seqreads path/to/codfreq/dir/ additional.codfreq.gz
+```
+
+The reports will be placed in the same directory of the input CodFreq file and
+named with suffix ".report.json".
+
+Users can customize the GraphQL by defining the query. A parameter `-q` or
+`--query` can be specified for defining the query fragment on
+`SequenceReadsAnalysis` object. An example and the default query is located [in
+the "fragments" folder][seqreads-query].
+
+
 ### Input Mutations
 
-This method is corresponding to the [HIVDB "Input Mutations"][hivdb-mutinput]
+This method is corresponding to the [HIVDB "Input mutations"][hivdb-mutinput]
 tab. It accepts PR, RT, and/or IN mutations based on
 [HIV-1 subtype B consensus][consensus]. The format of the mutations is not
 strictly required. Here's a list of examples for valid mutations:
@@ -141,8 +185,10 @@ greatly appreciated.
 [hivdb]: https://hivdb.stanford.edu/
 [pip]: https://github.com/pypa/get-pip
 [hivdb-seqinput]: https://hivdb.stanford.edu/hivdb/by-sequences/
+[hivdb-seqreadsinput]: https://hivdb.stanford.edu/hivdb/by-reads/
 [hivdb-mutinput]: https://hivdb.stanford.edu/hivdb/by-mutations/
-[seq-query]: https://raw.githubusercontent.com/hivdb/sierra-client/master/python/sierrapy/fragments/sequence_analysis_default.gql
+[seq-query]: https://raw.githubusercontent.com/hivdb/sierra-client/master/python/sierrapy/fragments/hiv1_sequence_analysis_default.gql
+[seqreads-query]: https://raw.githubusercontent.com/hivdb/sierra-client/master/python/sierrapy/fragments/hiv1_sequence_reads_analysis_default.gql
 [graphql-learn]: http://graphql.org/learn/
 [graphiql]: https://hivdb.stanford.edu/page/graphiql/
 [consensus]: https://hivdb.stanford.edu/page/release-notes/#appendix.1.consensus.b.sequences
