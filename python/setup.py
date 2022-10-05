@@ -6,7 +6,7 @@ import setuptools  # type: ignore
 
 from typing import List
 
-VERSION = '0.4.0'
+VERSION = '0.4.1'
 
 
 def strip_comments(line: str) -> str:
@@ -31,8 +31,11 @@ setup_params = dict(
     author='Philip Tzou',
     author_email="philiptz@stanford.edu",
     description='A Client of HIVdb Sierra GraphQL Webservice.',
-    packages=['sierrapy', 'sierrapy/fragments',
-              'sierrapy/recipes', 'sierrapy/commands'],
+    packages=['sierrapy',
+              'sierrapy/fragments',
+              'sierrapy/recipes',
+              'sierrapy/commands',
+              'sierrapy/viruses'],
     install_requires=req('requirements.txt'),
     # tests_require=reqs('test-requirements.txt'),
     include_package_data=True,

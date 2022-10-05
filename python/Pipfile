@@ -6,6 +6,7 @@ verify_ssl = true
 [dev-packages]
 sierrapy = {editable = true,path = "."}
 mypy = "*"
+twine = "*"
 
 [packages]
 gql = "*"
