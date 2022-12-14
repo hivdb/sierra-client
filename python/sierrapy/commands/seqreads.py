@@ -146,10 +146,11 @@ def parse_seqreads(
             continue
         if codon_reads == 0:
             continue
-        if codon.count('-') < 3:
-            codon = codon.replace('-', '')
-        if len(codon) < 3:
-            continue
+        # ## Leave to the backend to handle frameshift
+        # if codon.count('-') < 3:
+        #     codon = codon.replace('-', '')
+        # if len(codon) < 3:
+        #     continue
         gpkey = (gene, aapos)
         if gpkey not in gpmap:
             gpmap[gpkey] = {
