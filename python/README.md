@@ -76,16 +76,26 @@ You may redirect the output to a file using `-o` or `--output` parameter:
 sierrapy fasta fasta1.fasta fasta2.fasta -o output.json
 ```
 
-GraphQL allows users to customize the structure of output result by defining
-the query. The `sierrapy fasta` method accepts an optional parameter `-q` or
-`--query` which enabling users to define a custom query fragment on object
-`SequenceAnalysis`. An example and the default query is located
+GraphQL allows users to customize the structure of the output result by
+defining the query. The `sierrapy fasta` method accepts an optional parameter
+`-q` or `--query` which allows users to define a custom query fragment on the
+`SequenceAnalysis` object. An example and the default query can be found
 [in the "fragments" folder][seq-query]. Once you have your custom query,
-assume it saved at `path/to/your/query/file.gql`, use this command to get
+assuming it is saved at `path/to/your/query/file.gql`, use this command to get
 the customized result:
 
 ```shell
 sierrapy fasta fasta1.fasta fasta2.fasta -q path/to/your/query/file.gql
+```
+
+By default, SierraPy stores every 100 sequence results in a single JSON file
+in case of memory exhaustion. This behavior can be overridden by passing a
+`--sharding` parameter to the command. It is safe to increase the `--sharding`
+to 200 or even 500. However, as it gets larger, the JSON file will become
+increasely difficult to read or write with most popular JSON parsers:
+
+```shell
+sierrapy fasta fasta1.fasta fasta2.fasta --sharding 200
 ```
 
 For further infomations on how to write queries in GraphQL, please visit
@@ -172,7 +182,9 @@ sierrapy patterns /path/to/pattern/file.txt -o output.json
 ```
 
 Custom query fragment on object `MutationsAnalysis` can be also specified by
-parameter `-q` or `--query`. As we described in the above section.
+parameter `-q` or `--query`. As we described in the above section. This method
+also supports the same `--sharding` parameter described in the
+[`fasta` method](#input-sequences-fasta-file).
 
 Donation
 --------
