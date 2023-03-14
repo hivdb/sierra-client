@@ -6,7 +6,7 @@ import setuptools  # type: ignore
 
 from typing import List
 
-VERSION = '0.4.1'
+VERSION = '0.4.2'
 
 
 def strip_comments(line: str) -> str:
@@ -52,6 +52,7 @@ setup_params = dict(
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
         'Topic :: Scientific/Engineering :: Bio-Informatics'],
     # test_suite="nose.collector",
     zip_safe=True)
