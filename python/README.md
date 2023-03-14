@@ -88,19 +88,28 @@ the customized result:
 sierrapy fasta fasta1.fasta fasta2.fasta -q path/to/your/query/file.gql
 ```
 
-By default, SierraPy stores every 100 sequence results in a single JSON file
-in case of memory exhaustion. This behavior can be overridden by passing a
+For further infomations on how to write queries in GraphQL, please visit
+[graphql.org/learn][graphql-learn]. For API reference and a playground of HIVDB
+GraphQL service, please visit [hivdb.stanford.edu/page/graphiql][graphiql].
+
+#### Sharding
+
+By default, SierraPy stores the results of every 100 sequences in a single JSON
+file to prevent memory exhaustion. You can override this behavior by passing the
 `--sharding` parameter to the command. It is safe to increase the `--sharding`
-to 200 or even 500. However, as it gets larger, the JSON file will become
-increasely difficult to read or write with most popular JSON parsers:
+value to 200 or even 500. However, as the value increases, the JSON file will
+become increasingly difficult to read or write with most popular JSON parsers:
 
 ```shell
 sierrapy fasta fasta1.fasta fasta2.fasta --sharding 200
 ```
 
-For further infomations on how to write queries in GraphQL, please visit
-[graphql.org/learn][graphql-learn]. For API reference and a playground of HIVDB
-GraphQL service, please visit [hivdb.stanford.edu/page/graphiql][graphiql].
+You can also disable the sharding mechanism completely by using the `--no-sharding`
+flag. This will prevent the addition of a suffix to the output JSON file.
+
+```
+sierrapy fasta fasta1.fasta fasta2.fasta --no-sharding
+```
 
 ### Input Sequence Reads (CodFreq File)
 
