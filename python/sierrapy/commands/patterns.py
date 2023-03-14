@@ -49,6 +49,8 @@ def iter_patterns(
               help='File path to store the JSON result.')
 @click.option('--sharding', type=int, default=100,
               help='Save JSON result files per n patterns.')
+@click.option('--no-sharding', is_flag=True,
+              help='Save JSON result to a single file.')
 @click.option('--step', type=int, default=40,
               help='Send batch requests per n patterns.')
 @click.option('--skip', type=int, default=0,
@@ -68,6 +70,7 @@ def patterns(
     query: TextIO,
     output: str,
     sharding: int,
+    no_sharding: bool,
     step: int,
     skip: int,
     total: int,
@@ -110,9 +113,15 @@ def patterns(
         total=total,
         initial=skip
     )
-    output, ext = os.path.splitext(output)
-    if not ext:
-        ext = 'json'
-    for idx, partial in enumerate(chunked(result, sharding)):
-        with open('{}.{}{}'.format(output, idx + idx_offset, ext), 'w') as fp:
-            json.dump(partial, fp, indent=None if ugly else 2)
+    if no_sharding:
+        with open(output, 'w') as fp:
+            json.dump(list(result), fp, indent=None if ugly else 2)
+    else:
+        output, ext = os.path.splitext(output)
+        if not ext:
+            ext = 'json'
+        for idx, partial in enumerate(chunked(result, sharding)):
+            with open('{}.{}{}'.format(
+                output, idx + idx_offset, ext
+            ), 'w') as fp:
+                json.dump(partial, fp, indent=None if ugly else 2)
