@@ -4,7 +4,7 @@ bestMatchingSubtype {
     referenceAccession
 }
 availableGenes { name }
-minReadDepth
+minPositionReads
 minPrevalence
 readDepthStats {
     mean standardDeviation min max n
