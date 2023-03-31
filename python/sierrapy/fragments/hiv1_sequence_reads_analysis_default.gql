@@ -4,8 +4,13 @@ bestMatchingSubtype {
     referenceAccession
 }
 availableGenes { name }
+maxMixtureRate
+minCodonReads
 minPositionReads
 minPrevalence
+actualMinPrevalence
+mixtureRate
+assembledConsensus
 readDepthStats {
     mean standardDeviation min max n
     p5: percentile(p: 5)
@@ -25,6 +30,10 @@ readDepthStatsDRP {
     p75: percentile(p: 75)
     p90: percentile(p: 90)
     p95: percentile(p: 95)
+}
+validationResults {
+    level
+    message
 }
 allGeneSequenceReads {
     firstAA lastAA

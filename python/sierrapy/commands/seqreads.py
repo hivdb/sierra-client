@@ -191,7 +191,7 @@ def parse_seqreads(
               type=float, default=0.0005, show_default=True,
               help=('Maximum mixture rate for this sequence reads '
                     '(range: 0-1.0)'))
-@click.option('-d', '--min-codon-reads', type=int, default=10,
+@click.option('-d', '--min-codon-reads', type=int, default=1,
               show_default=True,
               help=('Minimal read depth applied to '
                     'each codon of this sequence'))
