@@ -23,7 +23,7 @@ from graphql.language.ast import DocumentNode as gqlDocument
 from .common_types import Sequence, SeqReads, ServerVer
 
 
-VERSION = '0.4.2'
+VERSION = '0.4.3'
 DEFAULT_URL = 'https://hivdb.stanford.edu/graphql'
 
 

@@ -6,7 +6,7 @@ import setuptools  # type: ignore
 
 from typing import List
 
-VERSION = '0.4.2'
+VERSION = '0.4.3'
 
 
 def strip_comments(line: str) -> str:
