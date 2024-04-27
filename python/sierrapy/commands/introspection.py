@@ -4,18 +4,23 @@ import click  # type: ignore
 from typing import TextIO, Dict, Any
 
 from .cli import cli
-from .options import url_option
+from .options import url_option, virus_option
 
 from ..sierraclient import SierraClient
+from .. import viruses
 
 
 @cli.command()
 @url_option('--url')
+@virus_option('--virus')
 @click.option('-o', '--output', default='-', type=click.File('w'),
               help='File path to store the JSON result.')
 @click.option('--ugly', is_flag=True, help='Output compressed JSON result.')
 @click.pass_context
-def introspection(ctx: click.Context, url, output: TextIO, ugly: bool) -> None:
+def introspection(
+    ctx: click.Context, url: str,
+    virus: viruses.Virus, output: TextIO, ugly: bool
+) -> None:
     """Output introspection of Sierra GraphQL web service."""
     client: SierraClient = SierraClient(url)
     client.current_version()
