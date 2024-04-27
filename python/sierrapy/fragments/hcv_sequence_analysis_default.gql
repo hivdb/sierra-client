@@ -1,0 +1,32 @@
+inputSequence {
+  header
+  SHA512
+}
+strain { name }
+genotypeText: subtypeText
+validationResults {
+  level
+  message
+}
+alignedGeneSequences {
+  firstAA lastAA
+  gene { name length }
+  mutations {
+    consensus
+    position
+    AAs
+    isInsertion
+    isDeletion
+    isUnusual
+    hasStop
+    text
+  }
+  alignedNAs
+  alignedAAs
+  prettyPairwise {
+    positionLine
+    refAALine
+    alignedNAsLine
+    mutationLine
+  }
+}
