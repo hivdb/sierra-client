@@ -4,11 +4,11 @@ inputSequence {
 },
 strain { name },
 subtypeText,
-validationResults {
+validationResults(includeGenes: [CA, PR, RT, IN]) {
     level,
     message
 },
-alignedGeneSequences {
+alignedGeneSequences(includeGenes: [CA, PR, RT, IN]) {
     firstAA, lastAA,
     gene { name, length },
     mutations {
