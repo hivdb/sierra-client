@@ -1,0 +1,54 @@
+inputSequence {
+    header,
+    SHA512
+}
+bestMatchingSubtype {
+    displayWithoutDistance
+}
+strain {
+    name,
+    display
+}
+validationResults {
+    level,
+    message
+}
+DRMs: mutations {
+    gene {
+        name,
+        drugClasses { name }
+    },
+    shortText
+}
+alignedGeneSequences {
+    gene {
+        name,
+        length
+    },
+    firstAA,
+    lastAA,
+    firstNA,
+    lastNA,
+    mutations {
+        position
+        AAs
+        isInsertion
+        isDeletion
+        insertedNAs
+        isUnusual
+        isSDRM
+        isDRM
+        primaryType
+        hasStop
+        shortText
+        isApobecMutation
+        isAmbiguous
+    },
+    prettyPairwise {
+        positionLine,
+        refAALine,
+        alignedNAsLine,
+        mutationLine
+    },
+}
+

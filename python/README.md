@@ -43,6 +43,13 @@ sierrapy --virus HIV2 ...
 
 For SARS-CoV-2 analysis
 sierrapy --virus SARS2 ...
+
+For HBV
+sierrapy --virus HBV fasta 1.fasta 2.fasta -o output.json
+
+For HCV
+sierrapy --virus HCV fasta 1.fasta 2.fasta -o output.json
+
 ```
 
 ### Specify GraphQL entry-point

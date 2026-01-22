@@ -74,7 +74,7 @@ def virus_option_callback(
 def virus_option(*args: Any) -> Callable:
     func: Callable = click.option(
         *args,
-        type=click.Choice(['HIV1', 'HIV2', 'SARS2']),
+        type=click.Choice(['HIV1', 'HIV2', 'SARS2', 'HCV', 'HBV']),
         default='HIV1', show_default=True,
         is_eager=True,
         callback=virus_option_callback,
